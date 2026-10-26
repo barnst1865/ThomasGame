@@ -1,0 +1,14 @@
+{
+  "name": "paws-and-pastures",
+  "version": "0.1.0",
+  "description": "A cozy farming game where you play as the farmer's dog.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node tools/serve.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
