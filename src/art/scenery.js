@@ -197,9 +197,12 @@ function drawCrop(ctx, tiles, x0, y0, tx, ty, pal) {
     }
   }
   if (pal.crop === 'bare') {
+    // Snow lies over the field, with the furrows just showing through.
+    box(ctx, x0, y0, TILE, TILE, '#e3ebf0');
+    for (let y = 3; y < TILE; y += 5) box(ctx, x0, y0 + y, TILE, 1, '#c3cfd8');
     for (let y = 0; y < TILE; y++) {
       for (let x = 0; x < TILE; x++) {
-        if (hash2(x0 + x, y0 + y, 8) < 0.35) pixel(ctx, x0 + x, y0 + y, '#eef3f6');
+        if (hash2(x0 + x, y0 + y, 8) < 0.05) pixel(ctx, x0 + x, y0 + y, '#9c8571');
       }
     }
     return;

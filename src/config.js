@@ -54,10 +54,10 @@ export const CHICKENS = {
 
 export const WEASEL = {
   health: 4,
-  sneakSpeed: 32,
+  sneakSpeed: 24,
   lungeSpeed: 150,
   fleeSpeed: 130,
-  stealTime: 5,
+  stealTime: 6,
 };
 
 // Time. The clock is measured in minutes since midnight.

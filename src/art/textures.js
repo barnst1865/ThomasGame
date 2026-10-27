@@ -168,7 +168,8 @@ export function buildBaseTextures(scene) {
   for (let mask = 0; mask < 16; mask++) canvasTexture(scene, `fence-${mask}`, 16, 16, (canvas) => drawFence(canvas, mask));
   canvasTexture(scene, 'gate-closed', 16, 48, (canvas) => drawGate(canvas, false));
   canvasTexture(scene, 'gate-open', 44, 16, (canvas) => drawGate(canvas, true));
-  canvasTexture(scene, 'glow', 128, 128, (canvas) => drawGlow(canvas));
+  // Lights are drawn into the night layer at quarter size (see FarmScene.updateNight).
+  for (const size of [16, 32]) canvasTexture(scene, `glow-${size}`, size, size, (canvas) => drawGlow(canvas));
 
   // Tiny helpers: a blank tileset for collisions, a pixel for particles, a shadow.
   canvasTexture(scene, 'collision', TILE * 3, TILE, () => {});

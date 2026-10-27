@@ -8,6 +8,7 @@
 //              dog sprite (see src/art/sprites.js). Any color you leave out
 //              falls back to `coat`.
 //   - stats:   multipliers on the base numbers in src/config.js (1 = normal)
+//   - barkPitch: how high the bark sounds (1 = normal, bigger = higher)
 //   - perk:    a short sentence telling the player what is special
 // Nothing else needs to change. The breed shows up on the "Choose your dog"
 // screen automatically.
@@ -19,6 +20,7 @@ export const BREEDS = [
     blurb: 'Tough, clever and never tired. Born to boss the herd around.',
     perk: 'Fearless: pounces hit threats twice as hard.',
     defaultName: 'Ranger',
+    barkPitch: 1,
     ears: 'pointy',
     tail: 'long',
     coats: [
@@ -65,6 +67,7 @@ export const BREEDS = [
     blurb: 'The smartest dog on the farm. Sheep listen to a collie.',
     perk: 'Herding Eye: sheep notice you from farther away.',
     defaultName: 'Skye',
+    barkPitch: 1.08,
     ears: 'floppy',
     tail: 'fluffy',
     coats: [
@@ -109,6 +112,7 @@ export const BREEDS = [
     blurb: 'Sunny, gentle and fluffy. Would fetch all day if you let it.',
     perk: 'Soft Mouth: runs faster while carrying things.',
     defaultName: 'Honey',
+    barkPitch: 0.88,
     ears: 'floppy',
     tail: 'fluffy',
     coats: [
@@ -153,6 +157,7 @@ export const BREEDS = [
     blurb: 'Short legs, huge heart. Corgis were bred to herd cattle!',
     perk: 'Big Bark: barks reach much farther.',
     defaultName: 'Waffles',
+    barkPitch: 1.25,
     ears: 'pointy',
     tail: 'none',
     coats: [

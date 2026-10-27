@@ -391,7 +391,7 @@ export const MOON = {
     '.mmmmmmmm',
     '...mmmmm.',
   ],
-  colors: { m: '#f3ecc2' },
+  colors: { m: '#7d86c9' },
 };
 
 // Everything above, for the sprite preview tool.

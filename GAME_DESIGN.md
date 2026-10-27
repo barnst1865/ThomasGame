@@ -61,3 +61,25 @@ A mix: some are threats, others can become friends or helpers (e.g., a forest sp
 5. Dig to bury a bone.
 6. Chase off a weasel at night.
 7. Sleep (auto-save) and repeat.
+
+## Status
+
+**Version 0.1 (first playable) is built.** Everything in the tiny farm loop
+above works: choosing a breed and coat, naming your dog, herding, eggs,
+burying and digging up bones, the weasel at night, sleeping, and auto-saving.
+Seasons already change the farm's colors and crops (pumpkins in fall, snow
+in winter).
+
+## Ideas for next versions
+
+- A shop where treats buy dog gear (collars, bandanas, hats, beds).
+  Collar colors are already supported in the dog sprites.
+- New areas: the woods trail on the east edge and the road to town (the
+  gate on the south fence is already there).
+- More animals: cows, pigs and the farm cat.
+- More threats: hawks swooping at the hens, coyotes, then wolves.
+- Mystical beings, some friendly (a forest spirit) and some not.
+- Tug and nip moves to go with pounce.
+- Digging up the farmer's lost things to deliver for rewards.
+- Touch controls for tablets and phones (the input layer is ready for it).
+- Music.

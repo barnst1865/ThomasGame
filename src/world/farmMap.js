@@ -43,6 +43,7 @@ export const AREAS = {
   penGate: rect(13, 23, 1, 3),
   trough: rect(4, 21, 2, 1),
   meadow: rect(17, 21, 17, 9),
+  pasture: rect(14, 18, 22, 12), // where loose sheep like to wander
   southGate: rect(22, 32, 3, 1),
 };
 
