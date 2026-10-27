@@ -394,6 +394,122 @@ export const MOON = {
   colors: { m: '#7d86c9' },
 };
 
+// ------------------------------------------------------------------ crow
+export const CROW_COLORS = { o: '#141218', c: '#2e2b3b', s: '#4a4766', e: '#f2e8c8', b: '#9a9488', y: '#6b5f55' };
+
+export const CROW = {
+  perch: [
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '..........ooo...',
+    '.........occco..',
+    '.........ocecbb.',
+    'ooo.....occcco..',
+    'occoooooccccco..',
+    '.occccccsssccco.',
+    '..oocsssscccoo..',
+    '....ooyoooyo....',
+  ],
+  peck: [
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    'ooo.............',
+    'occooooooooo....',
+    '.occccccsscccooo',
+    '..occcsssscocecb',
+    '...oocccccco.ob.',
+    '....ooyoooyo....',
+  ],
+  fly1: [
+    '................',
+    '................',
+    '..oo......oo....',
+    '.ocso....osco...',
+    '..ocso..oscco...',
+    '...ocsoosccoooo.',
+    'oo..occcccocceb.',
+    'occooccccccooo..',
+    '.ooo.oooooo.....',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+  ],
+  fly2: [
+    '................',
+    '................',
+    '................',
+    '................',
+    '..........oooo..',
+    'oo...oooooocceb.',
+    'occooccccccooo..',
+    '.ooocsssscco....',
+    '...ocssooscco...',
+    '..ocso....osco..',
+    '..oo.......oo...',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+  ],
+};
+
+// ----------------------------------------------------------- more items
+export const BALL = {
+  rows: ['..ooo..', '.orrwo.', 'orrrrwo', 'orrrrro', 'oRrrrro', '.oRRro.', '..ooo..'],
+  colors: { o: '#5a1e1a', r: '#e2483d', R: '#b5302a', w: '#ffd6d0' },
+};
+
+const BOWL_COLORS = { o: '#3a1f1a', R: '#c8473e', r: '#a83a33', k: '#a8693a', K: '#7a4826', d: '#5a2a24' };
+
+export const BOWL = {
+  rows: ['...kKkkKkkk...', '.okkKkkKkkKko.', 'oRRRRRRRRRRRRo', 'oRrrrrrrrrrrRo', '.oRrrrrrrrrRo.', '..oooooooooo..'],
+  colors: BOWL_COLORS,
+};
+
+export const BOWL_EMPTY = {
+  rows: ['..............', '..oooooooooo..', 'oRddddddddddRo', 'oRrrrrrrrrrrRo', '.oRrrrrrrrrRo.', '..oooooooooo..'],
+  colors: BOWL_COLORS,
+};
+
+const HORIZON_ROWS = [
+  '.....y.....',
+  '..y.....y..',
+  '....YYY....',
+  '...YYYYY...',
+  'y.YYYYYYY.y',
+  'ggggggggggg',
+  '.ggggggggg.',
+];
+
+export const SUNRISE = {
+  rows: HORIZON_ROWS,
+  colors: { y: '#f2a93b', Y: '#ffd84a', g: '#5f9e4f' },
+};
+
+export const SUNSET = {
+  rows: HORIZON_ROWS,
+  colors: { y: '#e2483d', Y: '#ff9a4a', g: '#4a6a3f' },
+};
+
 // Everything above, for the sprite preview tool.
 export function PREVIEW() {
   const list = [];
@@ -404,7 +520,8 @@ export function PREVIEW() {
   }
   for (const [name, rows] of Object.entries(FARMER)) list.push([`farmer ${name}`, rows, FARMER_COLORS]);
   for (const [pose, rows] of Object.entries(WEASEL)) list.push([`weasel ${pose}`, rows, WEASEL_COLORS]);
-  for (const [name, item] of Object.entries({ EGG, BONE, TREAT, HEART, HEART_EMPTY, HOLE, MOUND, BASKET, DOG_BED, EXCLAIM, QUESTION, ZZZ, SUN, MOON })) {
+  for (const [pose, rows] of Object.entries(CROW)) list.push([`crow ${pose}`, rows, CROW_COLORS]);
+  for (const [name, item] of Object.entries({ EGG, BONE, TREAT, BALL, BOWL, BOWL_EMPTY, HEART, HEART_EMPTY, HOLE, MOUND, BASKET, DOG_BED, EXCLAIM, QUESTION, ZZZ, SUN, SUNRISE, SUNSET, MOON })) {
     list.push([name.toLowerCase(), item.rows, item.colors]);
   }
   return list;

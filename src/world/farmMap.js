@@ -44,6 +44,7 @@ export const AREAS = {
   trough: rect(4, 21, 2, 1),
   meadow: rect(17, 21, 17, 9),
   pasture: rect(14, 18, 22, 12), // where loose sheep like to wander
+  fetchField: rect(11, 10, 12, 5), // where Farmer Hazel throws the ball
   southGate: rect(22, 32, 3, 1),
 };
 
@@ -61,6 +62,10 @@ export const POINTS = {
   sign: { x: px(21) + 8, y: px(31) + 8 },
   mailbox: { x: px(8) + 8, y: px(15) + 12 },
   scarecrow: { x: px(23), y: px(7) + 10 },
+  fetchSpot: { x: px(12), y: px(11) + 8 },
+  dinnerFarmer: { x: px(10) + 2, y: px(8) + 12 },
+  bowl: { x: px(8) + 6, y: px(8) + 13 },
+  meadowGate: { x: px(17), y: px(24) + 8 }, // where sheep head when let out
 };
 
 export function areaPx(area) {

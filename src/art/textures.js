@@ -13,6 +13,13 @@ import {
   FARMER_COLORS,
   WEASEL,
   WEASEL_COLORS,
+  CROW,
+  CROW_COLORS,
+  BALL,
+  BOWL,
+  BOWL_EMPTY,
+  SUNRISE,
+  SUNSET,
   EGG,
   BONE,
   TREAT,
@@ -126,7 +133,26 @@ function basketWithEggs(count) {
 
 // Everything that doesn't depend on which dog you picked.
 export function buildBaseTextures(scene) {
-  const items = { egg: EGG, bone: BONE, treat: TREAT, heart: HEART, 'heart-empty': HEART_EMPTY, hole: HOLE, mound: MOUND, 'dog-bed': DOG_BED, exclaim: EXCLAIM, question: QUESTION, zzz: ZZZ, sun: SUN, moon: MOON };
+  const items = {
+    egg: EGG,
+    bone: BONE,
+    treat: TREAT,
+    ball: BALL,
+    bowl: BOWL,
+    'bowl-empty': BOWL_EMPTY,
+    heart: HEART,
+    'heart-empty': HEART_EMPTY,
+    hole: HOLE,
+    mound: MOUND,
+    'dog-bed': DOG_BED,
+    exclaim: EXCLAIM,
+    question: QUESTION,
+    zzz: ZZZ,
+    sun: SUN,
+    sunrise: SUNRISE,
+    sunset: SUNSET,
+    moon: MOON,
+  };
   for (const [key, item] of Object.entries(items)) pixelTexture(scene, key, item.rows, item.colors);
   for (let n = 0; n <= 5; n++) {
     pixelTexture(scene, `basket-${n}`, basketWithEggs(n), { ...BASKET.colors, e: EGG.colors.w, E: EGG.colors.s });
@@ -157,6 +183,10 @@ export function buildBaseTextures(scene) {
 
   sheetTexture(scene, 'weasel', Object.entries(WEASEL).map(([pose, rows]) => [pose, rows, WEASEL_COLORS]), 16, 16);
   anim(scene, 'weasel-run', 'weasel', ['walk1', 'walk2'], 10);
+
+  sheetTexture(scene, 'crow', Object.entries(CROW).map(([pose, rows]) => [pose, rows, CROW_COLORS]), 16, 16);
+  anim(scene, 'crow-fly', 'crow', ['fly1', 'fly2'], 8);
+  anim(scene, 'crow-peck', 'crow', ['perch', 'peck', 'perch', 'peck'], 5, 0);
 
   canvasTexture(scene, 'house', 112, 96, (canvas) => drawHouse(canvas));
   canvasTexture(scene, 'coop', 64, 58, (canvas) => drawCoop(canvas));

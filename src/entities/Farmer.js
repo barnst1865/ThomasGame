@@ -1,19 +1,13 @@
-// Farmer Hazel follows a daily routine: porch in the morning, tending the
-// crops all day, back to the porch in the evening, then inside at night.
+// Farmer Hazel. The farm scene tells her what she's doing (see `farmer` in
+// src/data/day.js) and she walks there: the field, the yard for fetch, the
+// porch, dinner on the porch, or inside for the night.
 
 import { TILE } from '../config.js';
 import { AREAS, POINTS } from '../world/farmMap.js';
 import { normalize } from '../systems/steering.js';
 
-const SPEED = 38;
+const SPEED = 42;
 const FIELD_ENTRY = { x: AREAS.field.x * TILE - 6, y: (AREAS.field.y + AREAS.field.h) * TILE + 6 };
-
-function activityAt(minutes) {
-  if (minutes < 8 * 60 + 30) return 'porch';
-  if (minutes < 17 * 60) return 'field';
-  if (minutes < 19 * 60 + 45) return 'porch';
-  return 'inside';
-}
 
 function randomFieldSpot() {
   const f = AREAS.field;
@@ -22,6 +16,14 @@ function randomFieldSpot() {
     y: (f.y + 1 + Math.random() * (f.h - 1)) * TILE,
   };
 }
+
+const DESTINATIONS = {
+  field: () => randomFieldSpot(),
+  yard: () => POINTS.fetchSpot,
+  porch: () => POINTS.farmerPorch,
+  dinner: () => POINTS.dinnerFarmer,
+  inside: () => POINTS.houseDoor,
+};
 
 export class Farmer extends Phaser.GameObjects.Sprite {
   constructor(scene, x, y) {
@@ -45,6 +47,21 @@ export class Farmer extends Phaser.GameObjects.Sprite {
     return !this.inside && this.visible;
   }
 
+  // True once she has reached where she's going.
+  get arrived() {
+    return this.route.length === 0;
+  }
+
+  setActivity(activity) {
+    if (activity === this.activity) return;
+    this.activity = activity;
+    this.wait = 0;
+    const inField = this.x > AREAS.field.x * TILE - 8 && this.y < (AREAS.field.y + AREAS.field.h) * TILE + 2;
+    const goingToField = activity === 'field';
+    const destination = DESTINATIONS[activity]();
+    this.route = inField !== goingToField ? [FIELD_ENTRY, destination] : [destination];
+  }
+
   goInside() {
     this.inside = true;
     this.setVisible(false);
@@ -66,21 +83,14 @@ export class Farmer extends Phaser.GameObjects.Sprite {
     else this.face(dy > 0 ? 'down' : 'up');
   }
 
-  planRoute(activity) {
-    const inField = this.x > AREAS.field.x * TILE - 8 && this.y < (AREAS.field.y + AREAS.field.h) * TILE + 2;
-    if (activity === 'porch') this.route = inField ? [FIELD_ENTRY, POINTS.farmerPorch] : [POINTS.farmerPorch];
-    else if (activity === 'field') this.route = inField ? [randomFieldSpot()] : [FIELD_ENTRY, randomFieldSpot()];
-    else if (activity === 'inside') this.route = inField ? [FIELD_ENTRY, POINTS.houseDoor] : [POINTS.houseDoor];
+  // A little hop while throwing the ball.
+  throwToward(point) {
+    this.faceToward(point);
+    this.scene.tweens.add({ targets: this, y: this.y - 3, yoyo: true, duration: 90 });
   }
 
-  update(dt, minutes, dog) {
+  update(dt, dog) {
     if (this.inside) return;
-    const activity = activityAt(minutes);
-    if (activity !== this.activity) {
-      this.activity = activity;
-      this.planRoute(activity);
-      this.wait = 0;
-    }
 
     if (this.talking) {
       this.faceToward(dog);
@@ -105,12 +115,13 @@ export class Farmer extends Phaser.GameObjects.Sprite {
         this.setFlipX(this.facing === 'left');
         this.anims.play(`farmer-walk-${view}`, true);
       }
+    } else if (this.activity === 'dinner') {
+      this.face('down');
     } else {
-      // Standing still: watch the dog when it's close, otherwise tend the crops.
+      // Standing still: watch the dog when it's close, otherwise get on with work.
       const dogDist = Math.hypot(dog.x - this.x, dog.y - this.y);
-      if (dogDist < 48) this.faceToward(dog);
-      else if (this.activity === 'field') this.face('up');
-      else this.face('down');
+      if (dogDist < 56 || this.activity === 'yard') this.faceToward(dog);
+      else this.face(this.activity === 'field' ? 'up' : 'down');
       if (this.activity === 'field') {
         this.wait -= dt;
         if (this.wait <= 0) this.route = [randomFieldSpot()];

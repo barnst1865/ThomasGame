@@ -17,6 +17,8 @@ export function createNewSave({ name, breedId, coatId }) {
       eggsCollected: 0,
       sheepPenned: 0,
       weaselsChased: 0,
+      crowsChased: 0,
+      ballsCaught: 0,
     },
     flags: { metFarmer: false },
   };

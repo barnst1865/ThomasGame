@@ -46,3 +46,11 @@ test('adding a task twice keeps the first one, unknown tasks throw', () => {
   assert.equal(board.add('buryBone'), a);
   assert.throws(() => board.add('flyToTheMoon'));
 });
+
+test('tasks remember which part of the day they belong to', () => {
+  const board = new TaskBoard(TASKS);
+  board.add('collectEggs', 3, 'morning');
+  board.add('fetch', 3, 'break');
+  assert.deepEqual(board.forPart('morning').map((t) => t.id), ['collectEggs']);
+  assert.equal(board.get('fetch').part, 'break');
+});

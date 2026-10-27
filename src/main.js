@@ -6,6 +6,7 @@ import { TitleScene } from './scenes/TitleScene.js';
 import { ChooseDogScene } from './scenes/ChooseDogScene.js';
 import { FarmScene } from './scenes/FarmScene.js';
 import { HudScene } from './scenes/HudScene.js';
+import { installFocusGuard } from './ui/focusGuard.js';
 
 async function waitForFont() {
   // Text is drawn onto canvases, so the pixel font has to be ready first.
@@ -18,7 +19,7 @@ async function waitForFont() {
 
 await waitForFont();
 
-globalThis.pawsGame = new Phaser.Game({
+const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
   width: GAME_WIDTH,
@@ -29,3 +30,6 @@ globalThis.pawsGame = new Phaser.Game({
   physics: { default: 'arcade', arcade: { debug: false } },
   scene: [BootScene, TitleScene, ChooseDogScene, FarmScene, HudScene],
 });
+
+installFocusGuard(game);
+globalThis.pawsGame = game;

@@ -1,9 +1,10 @@
-// Everything drawn on top of the farm: clock, treats, hearts, today's
-// jobs, button prompts, messages, dialogue, the help and pause screens,
-// and the end-of-day summary.
+// Everything drawn on top of the farm: the part of the day, treats,
+// hearts, the current jobs, button prompts, messages, dialogue, the help
+// and pause screens, and the end-of-day summary.
 
-import { GAME_WIDTH as W, GAME_HEIGHT as H, COLORS, TIME } from '../config.js';
-import { formatClock, dateFromDay, isNight } from '../systems/calendar.js';
+import { GAME_WIDTH as W, GAME_HEIGHT as H, COLORS } from '../config.js';
+import { dateFromDay } from '../systems/calendar.js';
+import { DAY_PARTS } from '../data/day.js';
 import { Controls, KEY_LABELS } from '../input/controls.js';
 import { sfx, toggleMute } from '../systems/sfx.js';
 import { UI, textStyle, drawPanel, drawCheckbox, Menu } from '../ui/widgets.js';
@@ -27,7 +28,7 @@ export class HudScene extends Phaser.Scene {
     this.lastTaskKey = '';
     this.lastStatsKey = '';
 
-    this.buildClock();
+    this.buildDayPanel();
     this.buildStats();
     this.taskPanel = this.add.graphics();
     this.taskBox = this.add.container(0, 0, [this.taskPanel]);
@@ -35,6 +36,7 @@ export class HudScene extends Phaser.Scene {
     this.buildPrompt();
     this.buildDialogue();
     this.arrow = this.add.graphics().setDepth(5);
+    this.bars = [0, H].map((y) => this.add.rectangle(0, y, W, 54, 0x0d0f14, 1).setOrigin(0, y === 0 ? 0 : 1).setDepth(25).setScale(1, 0));
     this.help = this.buildHelp();
     this.hintText = this.add
       .text(12, H - 10, `${KEY_LABELS.help}: controls   ${KEY_LABELS.pause}: pause`, textStyle(13, '#f6ecd2'))
@@ -49,14 +51,18 @@ export class HudScene extends Phaser.Scene {
 
   // ------------------------------------------------------------ top bar
 
-  buildClock() {
+  // Top left: the date, which part of the day it is, and dots for the
+  // parts of the day still to come.
+  buildDayPanel() {
     const g = this.add.graphics();
-    drawPanel(g, 12, 12, 226, 66);
-    this.clockIcon = this.add.image(42, 45, 'sun').setScale(3);
-    this.dateText = this.add.text(68, 20, '', textStyle(17, COLORS.woodDark));
-    this.clockText = this.add.text(68, 40, '', textStyle(24));
-    this.clockBox = this.add.container(0, 0, [g, this.clockIcon, this.dateText, this.clockText]);
-    this.clockBox.rect = { x: 12, y: 12, w: 226, h: 66 };
+    drawPanel(g, 12, 12, 226, 78);
+    this.partIcon = this.add.image(44, 44, 'sunrise').setScale(3);
+    this.dateText = this.add.text(76, 18, '', textStyle(15, COLORS.woodDark));
+    this.partText = this.add.text(76, 35, '', textStyle(24));
+    this.partDots = this.add.graphics();
+    this.dayBox = this.add.container(0, 0, [g, this.partIcon, this.dateText, this.partText, this.partDots]);
+    this.dayBox.rect = { x: 12, y: 12, w: 226, h: 78 };
+    this.lastPartKey = '';
   }
 
   buildStats() {
@@ -80,21 +86,33 @@ export class HudScene extends Phaser.Scene {
     const spots = [this.farm.dog, this.farm.weasel]
       .filter(Boolean)
       .map((o) => ({ x: (o.x - cam.worldView.x) * cam.zoom, y: (o.y - 10 - cam.worldView.y) * cam.zoom }));
-    for (const box of [this.clockBox, this.statsBox, this.taskBox]) {
+    for (const box of [this.dayBox, this.statsBox, this.taskBox]) {
       const r = box.rect;
       if (!r) continue;
       const covered = spots.some((p) => p.x > r.x - 20 && p.x < r.x + r.w + 20 && p.y > r.y - 20 && p.y < r.y + r.h + 30);
-      const target = covered && !this.modal ? 0.3 : 1;
+      const target = this.cinematic ? 0 : covered && !this.modal ? 0.3 : 1;
       box.setAlpha(Phaser.Math.Linear(box.alpha, target, 0.2));
     }
   }
 
   updateTopBar() {
     const farm = this.farm;
-    const date = dateFromDay(farm.save.day);
-    this.dateText.setText(`${date.season} ${date.dayOfSeason}, Year ${date.year}`);
-    this.clockText.setText(formatClock(farm.minutes));
-    this.clockIcon.setTexture(isNight(farm.minutes) || farm.minutes >= TIME.nightfall - 30 ? 'moon' : 'sun');
+    const part = farm.plan.part;
+    const partKey = `${farm.save.day}|${part?.id}`;
+    if (part && partKey !== this.lastPartKey) {
+      this.lastPartKey = partKey;
+      const date = dateFromDay(farm.save.day);
+      this.dateText.setText(`${date.season} ${date.dayOfSeason}, Year ${date.year}`);
+      this.partText.setText(part.name);
+      this.partIcon.setTexture(part.icon);
+      const g = this.partDots.clear();
+      DAY_PARTS.forEach((p, i) => {
+        const x = 82 + i * 16;
+        const reached = i <= farm.plan.index;
+        g.fillStyle(UI.woodDark, 1).fillCircle(x, 75, 5);
+        g.fillStyle(i === farm.plan.index ? 0xf2a93b : reached ? UI.wood : UI.paper, 1).fillCircle(x, 75, 3);
+      });
+    }
 
     const key = `${farm.save.treats}|${farm.save.friendship.farmer}`;
     if (key !== this.lastStatsKey) {
@@ -108,7 +126,7 @@ export class HudScene extends Phaser.Scene {
   // --------------------------------------------------------------- tasks
 
   updateTasks() {
-    const tasks = this.farm.tasks.tasks;
+    const tasks = this.farm.plan.jobs();
     const key = tasks.map((t) => `${t.id}:${t.progress}:${t.status}`).join('|');
     if (key === this.lastTaskKey) return;
     this.lastTaskKey = key;
@@ -116,10 +134,15 @@ export class HudScene extends Phaser.Scene {
     this.taskTexts.forEach((t) => t.destroy());
     this.taskTexts = [];
     const g = this.taskPanel.clear();
-    const y = 88;
+    if (tasks.length === 0) {
+      this.taskBox.rect = null;
+      return;
+    }
+    const y = 100;
     const lineH = 26;
     const h = 40 + tasks.length * lineH;
-    const title = this.add.text(0, y + 11, "Today's jobs", textStyle(16, COLORS.woodDark, { fontStyle: 'bold' }));
+    const heading = `${this.farm.plan.part.name} jobs`;
+    const title = this.add.text(0, y + 11, heading, textStyle(16, COLORS.woodDark, { fontStyle: 'bold' }));
     const lines = tasks.map((task) => {
       const color = task.status === 'done' ? '#7c8a5a' : task.status === 'failed' ? '#b0623a' : COLORS.ink;
       return this.add.text(0, 0, this.farm.tasks.label(task), textStyle(15, color));
@@ -170,8 +193,11 @@ export class HudScene extends Phaser.Scene {
     const box = this.add.container(W / 2, -40, [bg, text]).setDepth(20);
     box.h = h;
     this.toasts.push(box);
+    // Only a few messages at once: the oldest one makes way.
+    if (this.toasts.length > 3) this.toasts.shift().destroy();
     this.layoutToasts();
     this.time.delayedCall(3600, () => {
+      if (!box.active) return;
       this.tweens.add({
         targets: box,
         alpha: 0,
@@ -399,45 +425,80 @@ export class HudScene extends Phaser.Scene {
 
   // --------------------------------------------------------- end of day
 
+  // A big title card when a new part of the day begins.
+  banner(title, subtitle) {
+    const t1 = this.add.text(0, -14, title, textStyle(40, COLORS.paper, { fontStyle: 'bold' })).setOrigin(0.5).setStroke(COLORS.woodDark, 8);
+    const t2 = this.add.text(0, 26, subtitle, textStyle(19, COLORS.paper)).setOrigin(0.5).setShadow(0, 2, '#2b2024', 0, false, true);
+    const w = Math.max(t1.width, t2.width) + 80;
+    const bg = this.add.graphics();
+    bg.fillStyle(UI.ink, 0.45).fillRoundedRect(-w / 2, -50, w, 104, 14);
+    const box = this.add.container(W / 2, H / 2 - 40, [bg, t1, t2]).setDepth(22).setAlpha(0).setScale(0.9);
+    this.tweens.chain({
+      targets: box,
+      tweens: [
+        { alpha: 1, scale: 1, duration: 300, ease: 'Back.Out' },
+        { alpha: 1, duration: 1800 },
+        { alpha: 0, y: box.y - 20, duration: 400, onComplete: () => box.destroy() },
+      ],
+    });
+  }
+
+  // Black bars at the top and bottom, like a movie, for little scenes.
+  letterbox(on) {
+    this.cinematic = on;
+    for (const bar of this.bars) this.tweens.add({ targets: bar, scaleY: on ? 1 : 0, duration: 500, ease: 'Sine.InOut' });
+  }
+
   showSleep(summary, onWake) {
     this.modal = 'sleep';
     this.closePause();
+    this.letterbox(false);
     const cover = this.add.rectangle(0, 0, W, H, 0x141a3a, 1).setOrigin(0).setDepth(50).setAlpha(0);
-    const parts = [];
     this.tweens.add({
       targets: cover,
       alpha: 1,
       duration: 1200,
       onComplete: () => {
-        const zs = [0, 1, 2].map((i) =>
-          this.add.image(W / 2 - 40 + i * 34, 120 - i * 16, 'zzz').setScale(3 + i).setDepth(51).setAlpha(0),
-        );
+        const zs = [0, 1, 2].map((i) => this.add.image(W / 2 - 40 + i * 34, 62 - i * 14, 'zzz').setScale(2 + i).setDepth(51).setAlpha(0));
         zs.forEach((z, i) => this.tweens.add({ targets: z, alpha: 1, y: z.y - 8, delay: i * 250, duration: 500 }));
-        parts.push(...zs);
 
-        const pw = 480;
+        const pw = 500;
+        const lineH = 24;
         const lines = summary.lines;
         const x = (W - pw) / 2;
-        const y = 170;
+        const y = 92;
         const title = this.add
-          .text(W / 2, y + 18, summary.title, textStyle(22, COLORS.ink, { fontStyle: 'bold', align: 'center', wordWrap: { width: pw - 60 } }))
+          .text(W / 2, y + 18, summary.title, textStyle(21, COLORS.ink, { fontStyle: 'bold', align: 'center', wordWrap: { width: pw - 60 } }))
           .setOrigin(0.5, 0)
           .setDepth(52);
-        const top = y + 30 + title.height;
-        const ph = top - y + 100 + lines.length * 26;
+        const top = y + 28 + title.height;
+        const ph = top - y + 92 + lines.length * lineH;
         const g = this.add.graphics().setDepth(51);
         drawPanel(g, x, y, pw, ph, { radius: 12 });
-        parts.push(g, title);
         lines.forEach((line, i) => {
-          parts.push(this.add.text(x + 34, top + i * 26, line.text, textStyle(17, line.color ?? COLORS.ink)).setDepth(52));
-          if (line.right) parts.push(this.add.text(x + pw - 34, top + i * 26, line.right, textStyle(17, COLORS.woodDark)).setOrigin(1, 0).setDepth(52));
+          this.add.text(x + 34, top + i * lineH, line.text, textStyle(16, line.color ?? COLORS.ink)).setDepth(52);
+          if (line.right) this.add.text(x + pw - 34, top + i * lineH, line.right, textStyle(16, COLORS.woodDark)).setOrigin(1, 0).setDepth(52);
         });
-        parts.push(this.add.text(W / 2, y + ph - 58, summary.footer, textStyle(15, COLORS.woodDark)).setOrigin(0.5).setDepth(52));
-        const wake = this.add.text(W / 2, y + ph - 30, 'Press E to wake up', textStyle(18, COLORS.ink, { fontStyle: 'bold' })).setOrigin(0.5).setDepth(52);
-        this.tweens.add({ targets: wake, alpha: 0.4, yoyo: true, repeat: -1, duration: 700 });
-        parts.push(wake);
-        this.wakeReadyAt = this.time.now + 600;
-        this.onWake = onWake;
+        this.add.text(W / 2, y + ph - 54, summary.footer, textStyle(15, COLORS.woodDark)).setOrigin(0.5).setDepth(52);
+        const prompt = this.add
+          .text(W / 2, y + ph - 28, 'Press any key or click to wake up', textStyle(18, COLORS.ink, { fontStyle: 'bold' }))
+          .setOrigin(0.5)
+          .setDepth(52);
+        this.tweens.add({ targets: prompt, alpha: 0.4, yoyo: true, repeat: -1, duration: 700 });
+
+        // Any key or click wakes the dog, after a short moment so a key
+        // that was already being pressed doesn't skip the summary.
+        let woken = false;
+        const wake = () => {
+          if (woken) return;
+          woken = true;
+          onWake();
+        };
+        this.time.delayedCall(500, () => {
+          this.onWake = wake;
+          this.input.keyboard.once('keydown', wake);
+          this.input.once('pointerdown', wake);
+        });
       },
     });
   }
@@ -470,11 +531,7 @@ export class HudScene extends Phaser.Scene {
         break;
       }
       case 'sleep':
-        if (this.onWake && time > this.wakeReadyAt && (c.justPressed('interact') || c.justPressed('pounce'))) {
-          const wake = this.onWake;
-          this.onWake = null;
-          wake();
-        }
+        if (this.onWake && (c.justPressed('interact') || c.justPressed('pounce'))) this.onWake();
         break;
       default:
         if (!this.farm.sleeping) {

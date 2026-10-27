@@ -10,7 +10,7 @@ A cozy farming game where you play as the farmer's dog.
 | Art style | Top-down pixel art |
 | Player | The farmer's dog |
 | Controls | Keyboard first, built so mobile/touch controls can be added later |
-| Time | Day/night cycle plus four seasons |
+| Time | No clock: each day is a series of parts that end when their jobs are done, plus four seasons |
 | Saving | Auto-save each night when the dog goes to sleep (stored in the browser) |
 
 ## The dog
@@ -52,26 +52,34 @@ Sheep, chickens, cows, pigs, and a cat.
 
 A mix: some are threats, others can become friends or helpers (e.g., a forest spirit that protects the farm).
 
-## First playable version: the tiny farm loop
+## A day on the farm
 
-1. Pick your dog.
-2. Run around one small farm.
-3. Herd sheep into a pen.
-4. Fetch eggs.
-5. Dig to bury a bone.
-6. Chase off a weasel at night.
-7. Sleep (auto-save) and repeat.
+Days are driven by jobs, not a clock. Each part of the day ends as soon as
+its jobs are done, and the sky moves on as you work.
+
+| Part | Jobs |
+|---|---|
+| Morning | Herd the sheep out to the meadow, bring the eggs to the basket, hide your bone |
+| Fun break | Play fetch with Farmer Hazel (catch it in the air for a bonus) |
+| Afternoon | Herd the sheep back into the pen, chase the crows off the crops |
+| Dinner | Dinner on the porch with Farmer Hazel at sunset |
+| Night | Keep the weasel away from the coop, then go to bed |
+
+You can only go to bed after the night job is finished. Sleeping saves the
+game and starts the next day.
 
 ## Status
 
-**Version 0.1 (first playable) is built.** Everything in the tiny farm loop
-above works: choosing a breed and coat, naming your dog, herding, eggs,
-burying and digging up bones, the weasel at night, sleeping, and auto-saving.
-Seasons already change the farm's colors and crops (pumpkins in fall, snow
-in winter).
+**Version 0.2 is built.** The task-driven day above works from start to
+finish, including fetch, crows, and dinner on the porch. The game pauses
+with a "Click to keep playing" button when it loses keyboard focus, and any
+key or a click wakes the dog up in the morning. Seasons change the farm's
+colors and crops (pumpkins in fall, snow in winter).
 
 ## Ideas for next versions
 
+- More fun-break activities to choose from: chase butterflies, splash in
+  the pond, free time to explore.
 - A shop where treats buy dog gear (collars, bandanas, hats, beds).
   Collar colors are already supported in the dog sprites.
 - New areas: the woods trail on the east edge and the road to town (the

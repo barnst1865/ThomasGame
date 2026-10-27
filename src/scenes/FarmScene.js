@@ -1,7 +1,8 @@
-// The farm: one full day of herding, fetching, digging and guarding.
-// Each new day restarts this scene with the saved progress.
+// The farm. A day is a series of parts (morning, fun break, afternoon,
+// dinner, night; see src/data/day.js). Each part ends when its jobs are
+// done. Sleeping saves and restarts this scene for the next day.
 
-import { TILE, WORLD_ZOOM, TIME, DOG, SHEEP, CHICKENS } from '../config.js';
+import { TILE, WORLD_ZOOM, DOG, SHEEP, CHICKENS, CROWS, FETCH, DAY } from '../config.js';
 import { buildFarm, T, MAP_W, MAP_H, AREAS, POINTS, areaPx, isSolid, isDiggable, tileAt, openTilesIn } from '../world/farmMap.js';
 import { buildFarmView } from '../world/farmView.js';
 import { Dog } from '../entities/Dog.js';
@@ -10,11 +11,16 @@ import { Chicken } from '../entities/Chicken.js';
 import { Farmer } from '../entities/Farmer.js';
 import { Weasel } from '../entities/Weasel.js';
 import { Item } from '../entities/Item.js';
+import { FetchGame } from '../activities/Fetch.js';
+import { CrowRaid } from '../activities/CrowRaid.js';
+import { DinnerScene } from '../activities/Dinner.js';
 import { getBreed, getCoat } from '../data/breeds.js';
 import { TASKS } from '../data/tasks.js';
+import { DAY_PARTS } from '../data/day.js';
 import { FARMER_NAME, LINES, fill, pick } from '../data/dialogue.js';
 import { TaskBoard } from '../systems/taskBoard.js';
-import { dateFromDay, formatDate, lighting, canSleep } from '../systems/calendar.js';
+import { DayPlan } from '../systems/dayPlan.js';
+import { dateFromDay, formatDate, lighting } from '../systems/calendar.js';
 import { writeSave } from '../systems/saveGame.js';
 import { insideRect } from '../systems/steering.js';
 import { sfx } from '../systems/sfx.js';
@@ -23,6 +29,7 @@ import { Controls, KEY_LABELS } from '../input/controls.js';
 const NIGHT_SCALE = 4;
 const inset = (r, n) => ({ x: r.x + n, y: r.y + n, w: r.w - n * 2, h: r.h - n * 2 });
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+const treatWord = (n) => `${n} ${n === 1 ? 'treat' : 'treats'}`;
 
 export class FarmScene extends Phaser.Scene {
   constructor() {
@@ -39,9 +46,9 @@ export class FarmScene extends Phaser.Scene {
     this.coat = getCoat(this.breed, save.dog.coatId);
     this.date = dateFromDay(save.day);
     this.tiles = buildFarm();
-    this.minutes = TIME.dayStart;
-    this.timeScale = 1;
     this.sleeping = false;
+    this.cutscene = false;
+    this.partChanging = false;
     this.flags = {};
     this.hintsShown = new Set();
     this.prompts = [];
@@ -52,6 +59,7 @@ export class FarmScene extends Phaser.Scene {
     this.holes = new Map();
     this.mounds = new Map();
     this.weasel = null;
+    this.weaselTimer = null;
     this.bark = null;
     this.barkTimer = 0;
 
@@ -78,10 +86,18 @@ export class FarmScene extends Phaser.Scene {
 
     this.controls = new Controls(this);
     this.tasks = new TaskBoard(TASKS);
-    this.tasks.add('herdSheep', this.sheep.length);
-    this.tasks.add('collectEggs', CHICKENS.eggsPerDay);
-    this.tasks.add('buryBone');
-    this.weaselTime = Phaser.Math.Between(TIME.weaselEarliest, TIME.weaselLatest);
+    this.plan = new DayPlan(this.tasks, DAY_PARTS, {
+      sheepOut: this.sheep.length,
+      collectEggs: CHICKENS.eggsPerDay,
+      fetch: FETCH.throws,
+      herdSheep: this.sheep.length,
+      chaseCrows: CROWS.total,
+    });
+    this.plan.begin();
+    this.sky = this.plan.skyTime();
+    this.fetch = new FetchGame(this);
+    this.crows = new CrowRaid(this);
+    this.dinner = new DinnerScene(this);
 
     this.scene.launch('Hud', { farm: this });
     this.hud = this.scene.get('Hud');
@@ -124,11 +140,12 @@ export class FarmScene extends Phaser.Scene {
     this.dog.body.setMass(3);
     this.physics.add.collider(this.dog, this.collisionLayer);
 
+    // The sheep spend the night in their pen.
     this.sheepGroup = this.physics.add.group();
-    const meadow = Phaser.Utils.Array.Shuffle(openTilesIn(this.tiles, AREAS.meadow, { diggableOnly: true }));
+    const pen = Phaser.Utils.Array.Shuffle(openTilesIn(this.tiles, AREAS.penInside, { diggableOnly: true }));
     this.sheep = [];
     for (let i = 0; i < SHEEP.count; i++) {
-      const spot = meadow[i];
+      const spot = pen[i];
       const sheep = new Sheep(this, spot.x * TILE + 8, spot.y * TILE + 14);
       this.sheepGroup.add(sheep);
       sheep.setupBody();
@@ -201,7 +218,7 @@ export class FarmScene extends Phaser.Scene {
   createNight() {
     const w = MAP_W * TILE;
     const h = MAP_H * TILE;
-    this.duskLayer = this.add.rectangle(0, 0, w, h, 0xff9a4a, 0).setOrigin(0).setDepth(9000);
+    this.duskLayer = this.add.rectangle(0, 0, w, h, 0xff8a3d, 1).setOrigin(0).setDepth(9000).setAlpha(0);
     // The darkness is drawn at quarter size and smoothly stretched, which
     // keeps it cheap to redraw every frame and makes the light edges soft.
     this.nightLayer = this.add
@@ -218,9 +235,11 @@ export class FarmScene extends Phaser.Scene {
     this.nightLayer.erase(`glow-${s}`, x / NIGHT_SCALE - s / 2, y / NIGHT_SCALE - s / 2);
   }
 
-  updateNight() {
-    const { darkness, dusk } = lighting(this.minutes);
-    this.duskLayer.setAlpha(dusk * 0.45);
+  // The sky drifts toward the time of day that matches the jobs done so far.
+  updateSky(dt) {
+    this.sky += (this.plan.skyTime() - this.sky) * Math.min(1, dt * 0.8);
+    const { darkness, dusk } = lighting(this.sky);
+    this.duskLayer.setAlpha(dusk * 0.62);
     for (const win of this.view.windows) win.setAlpha(Math.min(1, darkness * 2.2));
     if (darkness <= 0.01) {
       this.nightLayer.setVisible(false);
@@ -234,7 +253,7 @@ export class FarmScene extends Phaser.Scene {
     this.eraseLight(this.dog.x, this.dog.y - 6, 128);
   }
 
-  // ---------------------------------------------------------- the day
+  // ------------------------------------------------------- day by parts
 
   morning() {
     const name = this.save.dog.name;
@@ -247,58 +266,61 @@ export class FarmScene extends Phaser.Scene {
         this.flags.petted = true;
         this.addFriendship(1);
         this.floatIcon('heart', this.dog.x, this.dog.y - 18);
+        this.startPart(this.plan.part);
       });
     } else {
+      this.startPart(this.plan.part);
       this.hud.toast(`Good morning, ${name}! It's ${formatDate(this.save.day)}.`);
       if (this.date.dayOfSeason === 1) this.hud.toast(`${this.date.season} is here!`, 'good');
     }
   }
 
-  updateSchedule() {
-    const m = this.minutes;
-    const f = this.flags;
-    if (!f.dusk && m >= TIME.bedtimeAllowed) {
-      f.dusk = true;
-      this.hud.toast('The sun is going down. Your bed is ready whenever you are.');
+  // Called once at the start of each part of the day.
+  startPart(part) {
+    this.hud.banner(part.name, part.intro);
+    this.farmer.setActivity(part.farmer);
+    if (part.id === 'break') this.fetch.start();
+    else this.fetch.putAway();
+    if (part.id === 'afternoon') this.crows.start();
+    if (part.id === 'dinner') {
+      this.crows.shoo();
+      this.chickens.forEach((hen) => hen.goToBed(POINTS.coopDoor));
+      this.dinner.prepare();
     }
-    if (!f.hensToBed && m >= TIME.chickensToBed) {
-      f.hensToBed = true;
-      this.chickens.forEach((c) => c.goToBed(POINTS.coopDoor));
-      if (this.farmer.available) this.hud.bubble(this.farmer, fill(LINES.night, this.save.dog.name), 3.5, 26);
-    }
-    if (!f.night && m >= TIME.nightfall) {
-      f.night = true;
-      this.tasks.add('guardCoop');
-      this.hud.toast('Night has fallen. Keep the hens safe from weasels!', 'warn');
-    }
-    if (!f.weasel && m >= this.weaselTime) {
-      f.weasel = true;
-      this.spawnWeasel();
-    }
-    if (!this.sleeping && m >= TIME.midnight) this.endDay('midnight');
+    if (part.id === 'night') this.weaselTimer = DAY.weaselDelay;
+  }
+
+  checkPartDone() {
+    if (this.partChanging || this.plan.isLastPart || !this.plan.partDone()) return;
+    this.partChanging = true;
+    this.time.delayedCall(DAY.partPause * 1000, () => {
+      this.partChanging = false;
+      this.startPart(this.plan.advance());
+    });
   }
 
   update(time, delta) {
     const dt = Math.min(delta, 50) / 1000;
     this.controls.update();
-    const busy = !this.hud?.sys.isActive() || this.hud.isBusy() || this.sleeping;
+    this.updateSky(dt);
+    // Dialogue, menus and sleep freeze everything; little scenes (like
+    // dinner) only take away the controls.
+    const frozen = !this.hud?.sys.isActive() || this.hud.isBusy() || this.sleeping;
+    const busy = frozen || this.cutscene;
     this.controls.enabled = !busy;
+    if (frozen !== Boolean(this.animsFrozen)) {
+      if (frozen) this.anims.pauseAll();
+      else this.anims.resumeAll();
+      this.animsFrozen = frozen;
+    }
+    if (busy !== this.physics.world.isPaused) {
+      if (busy) this.physics.world.pause();
+      else this.physics.world.resume();
+    }
     if (busy) {
-      if (!this.physics.world.isPaused) {
-        this.physics.world.pause();
-        this.anims.pauseAll();
-      }
-      this.updateNight();
+      this.prompts = [];
       return;
     }
-    if (this.physics.world.isPaused) {
-      this.physics.world.resume();
-      this.anims.resumeAll();
-    }
-
-    this.minutes += dt * TIME.gameMinutesPerSecond * this.timeScale;
-    this.updateSchedule();
-    if (this.sleeping) return;
 
     const c = this.controls;
     const dog = this.dog;
@@ -311,18 +333,35 @@ export class FarmScene extends Phaser.Scene {
 
     this.updateSheep(dt);
     this.updateChickens(dt);
-    this.farmer.update(dt, this.minutes, dog);
-    this.updateWeasel(dt);
+    this.farmer.update(dt, dog);
+    this.fetch.update(dt);
+    this.crows.update(dt);
+    this.updateNight(dt);
 
     this.barkTimer -= dt;
     if (this.barkTimer <= 0) this.bark = null;
+    this.checkPartDone();
     this.prompts = this.buildPrompts(this.findInteraction());
-    this.updateNight();
   }
 
   // ---------------------------------------------------------- animals
 
+  // Near the open gate, sheep head the way they're meant to go: out to the
+  // meadow in the morning, home to the pen in the afternoon.
+  sheepPull() {
+    const part = this.plan.part?.id;
+    const gate = this.gatePoint;
+    if (part === 'morning') {
+      return { appliesTo: 'inPen', gate, toward: POINTS.meadowGate, approach: { x: gate.x - 28, y: gate.y }, wanderChance: 0.3 };
+    }
+    if (part === 'afternoon' && !this.gateClosed) {
+      return { appliesTo: 'grazing', gate, toward: this.penHome, approach: { x: gate.x + 30, y: gate.y }, wanderChance: 0.2 };
+    }
+    return null;
+  }
+
   updateSheep(dt) {
+    const part = this.plan.part?.id;
     const ctx = {
       dog: this.dog,
       flock: this.sheep,
@@ -330,23 +369,31 @@ export class FarmScene extends Phaser.Scene {
       bark: this.bark,
       penRect: this.penRect,
       roamRect: this.roamRect,
-      gate: this.gateClosed ? null : this.gatePoint,
-      home: this.penHome,
+      pull: this.sheepPull(),
     };
-    let penned = 0;
     for (const sheep of this.sheep) {
       sheep.update(dt, ctx);
-      if (!sheep.penned && insideRect(sheep.feet, this.penRect)) {
-        sheep.penned = true;
+      if (sheep.state === 'inPen' && !insideRect(sheep.feet, this.penOuter)) {
+        sheep.state = 'grazing';
+        sheep.target = null;
+        sfx.baa();
+        this.hud.bubble(sheep, 'Baa!', 1.2, 16);
+      } else if (sheep.state === 'grazing' && part === 'afternoon' && insideRect(sheep.feet, this.penRect)) {
+        sheep.state = 'penned';
         sheep.target = null;
         this.save.stats.sheepPenned += 1;
         sfx.baa();
         this.hud.bubble(sheep, 'Baa!', 1.2, 16);
       }
-      if (sheep.penned) penned += 1;
     }
-    if (penned !== this.tasks.get('herdSheep').progress) this.progressTask('herdSheep', penned, true);
-    if (penned === this.sheep.length && !this.gateClosed) {
+    if (this.tasks.isActive('sheepOut')) {
+      this.progressTask('sheepOut', this.sheep.filter((s) => s.state !== 'inPen').length, true);
+    }
+    if (this.tasks.isActive('herdSheep')) {
+      this.progressTask('herdSheep', this.sheep.filter((s) => s.state === 'penned').length, true);
+    }
+    const allHome = part === 'afternoon' && this.sheep.every((s) => s.state === 'penned');
+    if (allHome && !this.gateClosed) {
       // Wait until the dog is out of the way so it doesn't get shut in.
       if (insideRect(this.dog.feet, this.penOuter)) {
         this.hintOnce('gate', 'All the sheep are in! Step away from the pen and the gate will swing shut.');
@@ -362,11 +409,23 @@ export class FarmScene extends Phaser.Scene {
     for (const hen of this.chickens) hen.update(dt, ctx);
   }
 
+  // ------------------------------------------------------------- night
+
+  updateNight(dt) {
+    if (this.weaselTimer !== null) {
+      this.weaselTimer -= dt;
+      if (this.weaselTimer <= 0) {
+        this.weaselTimer = null;
+        this.spawnWeasel();
+      }
+    }
+    this.updateWeasel(dt);
+  }
+
   spawnWeasel() {
     const path = [POINTS.weaselEntry, POINTS.weaselTurn, POINTS.coopDoor];
     const exit = [POINTS.weaselTurn, POINTS.weaselEntry, { x: POINTS.weaselEntry.x + 40, y: POINTS.weaselEntry.y }];
     this.weasel = new Weasel(this, path, exit);
-    this.tasks.add('guardCoop');
     sfx.hiss();
     this.hud.toast('Something is sneaking toward the coop!', 'warn');
   }
@@ -397,16 +456,24 @@ export class FarmScene extends Phaser.Scene {
       } else if (event === 'defeated') {
         this.save.stats.weaselsChased += 1;
         this.progressTask('guardCoop', 1);
+        this.bedtime();
       } else if (event === 'stole') {
         this.tasks.fail('guardCoop');
         sfx.sad();
         this.hud.toast('Oh no! The weasel snuck off with an egg. Better luck tomorrow night.', 'warn');
+        this.bedtime();
       }
     }
     if (weasel.done) {
       weasel.destroy();
       this.weasel = null;
     }
+  }
+
+  // The night job is over one way or another: now the dog can go to bed.
+  bedtime() {
+    this.tasks.add('goToBed', 1, 'night');
+    this.time.delayedCall(1200, () => this.hud.toast(LINES.bedtimeNow));
   }
 
   // ------------------------------------------------------ dog actions
@@ -427,6 +494,7 @@ export class FarmScene extends Phaser.Scene {
     if (this.weasel && distance(dog.feet, this.weasel.feet) < radius && this.weasel.startle()) {
       this.hud.bubble(this.weasel, '?!', 1, 16);
     }
+    this.crows.hearBark(this.bark);
     let clucked = false;
     for (const hen of this.chickens) {
       if (hen.visible && distance(dog.feet, hen.feet) < radius * 0.7 && hen.scare(dog.feet) && !clucked) {
@@ -458,6 +526,11 @@ export class FarmScene extends Phaser.Scene {
     if (dog.carrying?.kind === 'egg') {
       this.hud.bubble(dog, '...', 1, 18);
       this.hintOnce('egg', 'Eggs go in the basket, not in the ground!');
+      return;
+    }
+    if (dog.carrying?.kind === 'ball') {
+      this.hud.bubble(dog, '...', 1, 18);
+      this.hintOnce('ball', `${FARMER_NAME} wants to throw the ball again! Bring it back to her.`);
       return;
     }
     const buried = this.save.buried.some((b) => b.tx === tx && b.ty === ty);
@@ -501,10 +574,8 @@ export class FarmScene extends Phaser.Scene {
     this.addHole(tx, ty);
     if (this.treatFinds < 2 && Math.random() < 0.12) {
       this.treatFinds += 1;
-      this.save.treats += 1;
-      this.dayTreats += 1;
+      this.giveTreats(1);
       sfx.chime();
-      this.floatIcon('treat', dog.x, dog.y - 20);
       this.hud.toast('You dug up a buried treat! +1 treat', 'good');
     }
   }
@@ -528,9 +599,12 @@ export class FarmScene extends Phaser.Scene {
     const dog = this.dog;
     if (dog.mode !== 'normal') return null;
     const p = dog.feet;
-    const farmerNear = this.farmer.available && distance(this.farmer.feet, p) < 24;
+    const farmerNear = this.farmer.available && distance(this.farmer.feet, p) < 26;
     const carried = dog.carrying;
     if (carried) {
+      if (carried.kind === 'ball' && farmerNear && this.fetch.owns(carried)) {
+        return { label: this.fetch.giveLabel, action: () => this.fetch.returnBall() };
+      }
       if (carried.kind === 'egg') {
         if (farmerNear) return { label: `Give the egg to ${FARMER_NAME}`, action: () => this.deliverEgg(true) };
         if (distance(POINTS.basket, p) < 22) return { label: 'Put the egg in the basket', action: () => this.deliverEgg(false) };
@@ -541,7 +615,7 @@ export class FarmScene extends Phaser.Scene {
     let best = null;
     let bestDist = DOG.reach;
     for (const item of this.items) {
-      if (item.carried) continue;
+      if (item.carried || item.inFlight) continue;
       const d = distance({ x: item.x, y: item.y - 3 }, p);
       if (d < bestDist) {
         best = item;
@@ -549,9 +623,11 @@ export class FarmScene extends Phaser.Scene {
       }
     }
     if (best) return { label: `Pick up the ${best.label}`, action: () => this.pickUp(best) };
+    const atDinner = this.dinner.ready && (farmerNear || distance(POINTS.bowl, p) < 28);
+    if (atDinner) return { label: 'Sit down for dinner', action: () => this.dinner.start() };
     if (farmerNear) return { label: `Talk to ${FARMER_NAME}`, action: () => this.talkToFarmer() };
     if (distance(POINTS.dogBed, p) < 20) {
-      return { label: canSleep(this.minutes) ? 'Go to sleep' : 'Lie down in your bed', action: () => this.trySleep() };
+      return { label: this.tasks.isActive('goToBed') ? 'Go to sleep' : 'Lie down in your bed', action: () => this.trySleep() };
     }
     return null;
   }
@@ -571,6 +647,7 @@ export class FarmScene extends Phaser.Scene {
     sfx.pickup();
     if (item.kind === 'bone') this.hintOnce('bone', `Find a nice patch of grass and press ${KEY_LABELS.dig} to bury your bone.`);
     if (item.kind === 'egg') this.hintOnce('egg-carry', 'Bring the egg to the basket on the porch.');
+    if (item.kind === 'ball') this.hintOnce('ball-carry', `Bring the ball back to ${FARMER_NAME}.`);
   }
 
   dropItem() {
@@ -595,9 +672,8 @@ export class FarmScene extends Phaser.Scene {
     const first = !this.flags.petted;
     const lines = [];
     if (first) lines.push(...pick(LINES.goodMorning));
-    const remaining = this.tasks.remaining();
-    lines.push(remaining.length > 0 ? LINES.hints[remaining[0].id] : pick(LINES.allDone));
-    if (this.minutes >= TIME.bedtimeAllowed) lines.push(LINES.bedtime);
+    const next = this.plan.jobs().find((t) => t.status === 'active');
+    lines.push(next ? LINES.hints[next.id] : pick(LINES.allDone));
     const entries = lines.map((l) => fill(l, name));
     if (first) entries.push({ speaker: null, text: fill(pick(LINES.pet), name) });
     this.farmer.talking = true;
@@ -612,12 +688,14 @@ export class FarmScene extends Phaser.Scene {
   }
 
   trySleep() {
-    if (!canSleep(this.minutes)) {
-      this.hud.bubble(this.dog, 'Not sleepy yet...', 1.6, 18);
-      this.hintOnce('sleep', 'You can go to bed after 6 PM.');
+    if (this.tasks.isActive('goToBed')) {
+      this.endDay();
       return;
     }
-    this.endDay('bed');
+    this.hud.bubble(this.dog, 'Not sleepy yet!', 1.6, 18);
+    const next = this.plan.jobs().find((t) => t.status === 'active');
+    if (this.plan.part.id === 'night' && next) this.hud.toast(`Not yet! First: ${next.title.toLowerCase()}.`);
+    else this.hintOnce('sleep', 'Bedtime comes after the night job. There is lots to do first!');
   }
 
   // ------------------------------------------------- rewards and hints
@@ -629,13 +707,19 @@ export class FarmScene extends Phaser.Scene {
 
   rewardTask(task) {
     const { treats, friendship } = task.reward;
-    this.save.treats += treats;
-    this.dayTreats += treats;
+    if (task.id === 'goToBed') return;
+    this.giveTreats(treats);
     this.addFriendship(friendship);
     sfx.chime();
-    this.hud.toast(`Job done! ${task.title}.  +${treats} treats`, 'good');
+    this.hud.toast(`Job done! ${task.title}.${treats > 0 ? `  +${treatWord(treats)}` : ''}`, 'good');
     const line = LINES.taskDone[task.id];
     if (line && this.farmer.available) this.hud.bubble(this.farmer, fill(line, this.save.dog.name), 3, 26);
+  }
+
+  giveTreats(count) {
+    if (count <= 0) return;
+    this.save.treats += count;
+    this.dayTreats += count;
     this.floatIcon('treat', this.dog.x, this.dog.y - 20);
   }
 
@@ -654,11 +738,12 @@ export class FarmScene extends Phaser.Scene {
     this.tweens.add({ targets: icon, y: y - 16, alpha: 0, duration: 900, ease: 'Quad.Out', onComplete: () => icon.destroy() });
   }
 
-  // --------------------------------------------------------- night end
+  // ------------------------------------------------------- end of day
 
-  endDay(reason) {
+  endDay() {
     if (this.sleeping) return;
     this.sleeping = true;
+    this.progressTask('goToBed', 1);
     const dog = this.dog;
     const name = this.save.dog.name;
     if (dog.carrying) {
@@ -666,26 +751,24 @@ export class FarmScene extends Phaser.Scene {
       dog.carrying = null;
       this.removeItem(item);
     }
-    if (reason === 'bed') dog.sleep(POINTS.dogBed.x, POINTS.dogBed.y + 5);
-    else dog.sleep(dog.x, dog.y);
+    dog.sleep(POINTS.dogBed.x, POINTS.dogBed.y + 5);
     sfx.lullaby();
 
-    const lines = this.tasks.tasks.map((t) => ({
-      text: t.title,
-      right: t.status === 'done' ? `+${t.reward.treats} treats` : t.status === 'failed' ? 'missed' : 'not done',
-      color: t.status === 'done' ? '#2b2024' : '#8a6a5a',
-    }));
-    if (this.treatFinds > 0) lines.push({ text: 'Treats found while digging', right: `+${this.treatFinds}` });
+    const lines = this.tasks.tasks
+      .filter((t) => t.id !== 'goToBed')
+      .map((t) => ({
+        text: t.title,
+        right: t.status === 'done' ? (t.reward.treats > 0 ? `+${treatWord(t.reward.treats)}` : 'done') : t.status === 'failed' ? 'missed' : 'not done',
+        color: t.status === 'done' ? '#2b2024' : '#8a6a5a',
+      }));
     lines.push({ text: 'Treats earned today', right: String(this.dayTreats) });
     lines.push({ text: 'Bones in your secret stash', right: String(this.save.buried.filter((b) => b.item === 'bone').length) });
 
     this.save.day += 1;
     const saved = writeSave(this.save);
-    const title =
-      reason === 'bed' ? `${name} curls up for the night.` : `${name} fell asleep outside! ${FARMER_NAME} carried you to bed.`;
     const footer = saved ? 'Your farm has been saved.' : "This browser won't let the game save, so today won't be remembered.";
-    this.time.delayedCall(reason === 'bed' ? 700 : 200, () => {
-      this.hud.showSleep({ title, lines, footer }, () => this.scene.restart({ save: this.save }));
+    this.time.delayedCall(700, () => {
+      this.hud.showSleep({ title: `${name} curls up for the night.`, lines, footer }, () => this.scene.restart({ save: this.save }));
     });
   }
 

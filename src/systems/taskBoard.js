@@ -6,12 +6,13 @@ export class TaskBoard {
     this.tasks = [];
   }
 
-  add(id, target = 1) {
+  // `part` is the part of the day the job belongs to (see src/data/day.js).
+  add(id, target = 1, part = null) {
     const def = this.definitions[id];
     if (!def) throw new Error(`Unknown task: ${id}`);
     const existing = this.get(id);
     if (existing) return existing;
-    const task = { id, title: def.title, reward: def.reward, target, progress: 0, status: 'active' };
+    const task = { id, title: def.title, reward: def.reward, target, part, progress: 0, status: 'active' };
     this.tasks.push(task);
     return task;
   }
@@ -48,6 +49,10 @@ export class TaskBoard {
     const task = this.get(id);
     if (task && task.status === 'active') task.status = 'failed';
     return task;
+  }
+
+  forPart(part) {
+    return this.tasks.filter((t) => t.part === part);
   }
 
   remaining() {

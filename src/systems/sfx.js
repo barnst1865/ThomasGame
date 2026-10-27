@@ -97,6 +97,20 @@ export const sfx = {
   cluck() {
     tone({ freq: 950, to: 600, type: 'triangle', duration: 0.06, volume: 0.04 });
   },
+  caw() {
+    tone({ freq: 620, to: 380, type: 'sawtooth', duration: 0.16, volume: 0.035 });
+    tone({ freq: 560, to: 340, type: 'sawtooth', start: 0.2, duration: 0.16, volume: 0.03 });
+  },
+  flap() {
+    noise({ duration: 0.2, volume: 0.04, filter: 900 });
+  },
+  munch() {
+    noise({ duration: 0.06, volume: 0.05, filter: 1200 });
+    noise({ start: 0.12, duration: 0.06, volume: 0.05, filter: 1200 });
+  },
+  throw() {
+    tone({ freq: 300, to: 900, type: 'triangle', duration: 0.18, volume: 0.04 });
+  },
   blip() {
     tone({ freq: 880, type: 'square', duration: 0.04, volume: 0.03 });
   },

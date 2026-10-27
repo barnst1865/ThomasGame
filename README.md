@@ -8,21 +8,29 @@ It runs in any web browser with no install and no build step.
 
 ## How to play
 
-Each day Farmer Hazel has jobs for you:
+There's no clock. Each day is made of parts, and the next part starts as
+soon as you finish the jobs in this one:
 
-- **Herd the sheep into the pen.** Sheep walk away from you, so get on the
-  far side of them and push them toward the gate. Barking scares them along
-  faster.
-- **Bring the eggs to the basket.** Pick up eggs near the coop and carry
-  them to the basket on the porch (or straight to Farmer Hazel).
-- **Hide your bone.** Pick it up, find some grass, and dig. Your buried
-  bones stay hidden day after day. Remember where you put them!
-- **Keep the weasel away.** After dark a weasel sneaks toward the coop.
-  Bark to startle it, then pounce to chase it off. Watch out for its lunge.
+1. **Morning:** herd the sheep out of their pen to graze, bring the hens'
+   eggs to the basket on the porch, and hide your bone by digging a hole.
+2. **Fun break:** play fetch with Farmer Hazel. Catch the ball right as it
+   lands for a bonus treat.
+3. **Afternoon:** herd the sheep back into the pen, and chase the crows off
+   the crops. Barking makes a crow hop away; bark again or run at it and it
+   flies off for good.
+4. **Dinner:** sit down with Farmer Hazel on the porch as the sun sets.
+5. **Night:** a weasel sneaks toward the coop. Bark to startle it, then
+   pounce to chase it off. Watch out for its lunge!
+6. **Bed:** once the night job is done, curl up in your bed. The game saves
+   and a new day begins.
 
-Jobs earn treats and friendship hearts. After 6 PM you can sleep in your bed,
-which saves the game and starts a new day. Stay up until midnight and you'll
-fall asleep wherever you are.
+Sheep walk away from you, so to herd them, get on the far side and push.
+Your buried bones stay hidden day after day. Jobs earn treats and
+friendship hearts. Your jobs for the current part of the day are always
+listed in the top right corner.
+
+If you click outside the game, it pauses and shows a "Click to keep playing"
+button (the game can only hear the keyboard while it has focus).
 
 | Action                   | Keys              |
 | ------------------------ | ----------------- |
@@ -56,6 +64,13 @@ Any static web server works too (for example `python3 -m http.server`). The
 page has to be served over http, because browsers won't load the game's
 JavaScript modules straight from a file.
 
+## Changing the day
+
+The parts of the day and their jobs are listed in `src/data/day.js`, and the
+jobs themselves (names and rewards) in `src/data/tasks.js`. Numbers like how
+many crows come or how many times Farmer Hazel throws the ball are in
+`src/config.js`.
+
 ## Adding a new dog breed
 
 Open `src/data/breeds.js`, copy one of the breeds, and change it. You give it
@@ -74,9 +89,10 @@ index.html, style.css   the page
 src/main.js             starts Phaser
 src/config.js           numbers for tuning (speeds, day length, ...)
 src/scenes/             title, choose your dog, the farm, the HUD on top
-src/entities/           the dog, sheep, hens, farmer, weasel, items
-src/systems/            clock and seasons, saving, jobs, sounds, movement math
-src/data/               breeds, jobs, the farmer's lines
+src/entities/           the dog, sheep, hens, farmer, weasel, crows, items
+src/activities/         fetch, the crow raid, dinner on the porch
+src/systems/            the day plan, seasons, saving, jobs, sounds, movement math
+src/data/               breeds, the parts of the day, jobs, the farmer's lines
 src/world/              the farm's layout and building it on screen
 src/art/                all the pixel art, drawn with code
 src/input/controls.js   keys mapped to actions

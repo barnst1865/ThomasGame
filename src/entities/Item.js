@@ -3,6 +3,7 @@
 export const ITEM_NAMES = {
   egg: 'egg',
   bone: 'bone',
+  ball: 'ball',
 };
 
 export class Item extends Phaser.GameObjects.Image {
