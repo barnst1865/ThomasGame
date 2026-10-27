@@ -6,7 +6,8 @@ import { buildDogTexture } from '../art/textures.js';
 import { createNewSave } from '../systems/saveGame.js';
 import { Controls } from '../input/controls.js';
 import { sfx } from '../systems/sfx.js';
-import { textStyle, drawPanel, UI } from '../ui/widgets.js';
+import { textStyle, drawPanel, textButton, UI } from '../ui/widgets.js';
+import { touchInput } from '../input/touch.js';
 
 const NAME_MAX = 12;
 const NAME_CHARS = /^[a-zA-Z0-9 '\-]$/;
@@ -47,16 +48,11 @@ export class ChooseDogScene extends Phaser.Scene {
     this.coatLeft = this.arrowButton(530, 404, -1, () => this.changeCoat(-1), 0.6);
     this.coatRight = this.arrowButton(860, 404, 1, () => this.changeCoat(1), 0.6);
 
-    this.add
-      .text(W / 2, H - 52, 'Left / Right: breed     Up / Down: coat color     Enter: choose', textStyle(17, COLORS.paper))
-      .setOrigin(0.5)
-      .setShadow(0, 2, '#1d2a1f', 0, false, true);
-    this.add
-      .text(W / 2, H - 24, 'Each dog is good at something different!', textStyle(15, COLORS.paperDark))
-      .setOrigin(0.5)
-      .setShadow(0, 2, '#1d2a1f', 0, false, true);
+    textButton(this, 250, 462, 'Pick this dog', () => this.mode === 'pick' && this.openNaming(), { width: 230, fill: 0xf2c45a });
+    this.hint = this.add.text(W / 2, H - 20, '', textStyle(16, COLORS.paper)).setOrigin(0.5).setShadow(0, 2, '#1d2a1f', 0, false, true);
 
     this.input.keyboard.on('keydown', (event) => this.onKey(event));
+    this.events.once('shutdown', () => this.closeNameBox());
     this.refresh();
     this.time.addEvent({ delay: 3500, loop: true, callback: () => this.showOff() });
     this.cameras.main.fadeIn(400);
@@ -166,14 +162,83 @@ export class ChooseDogScene extends Phaser.Scene {
     field.fillStyle(UI.woodDark, 1).fillRoundedRect(W / 2 - 180, 230, 360, 60, 8);
     field.fillStyle(0xffffff, 1).fillRoundedRect(W / 2 - 176, 234, 352, 52, 6);
     this.nameField = this.add.text(W / 2, 260, '', textStyle(30, COLORS.ink)).setOrigin(0.5);
-    const help = this.add
-      .text(W / 2, 330, 'Type a name, then press Enter.\nBackspace erases. Esc goes back.', textStyle(16, COLORS.woodDark, { align: 'center' }))
-      .setOrigin(0.5);
-    this.namingParts = [dim, g, ask, field, this.nameField, help];
+    const tip = touchInput.active ? 'Tap the box to type a name.' : 'Type a name, then press Enter.';
+    const help = this.add.text(W / 2, 312, tip, textStyle(16, COLORS.woodDark)).setOrigin(0.5);
+    const back = textButton(this, W / 2 - 110, 354, 'Back', () => this.closeNaming(), { width: 160, height: 38, size: 18 });
+    const start = textButton(this, W / 2 + 110, 354, 'Start!', () => this.submitName(), { width: 160, height: 38, size: 18, fill: 0xf2c45a });
+    this.namingParts = [dim, g, ask, field, this.nameField, help, ...back, ...start];
+    if (touchInput.active) this.openNameBox();
     this.updateNameField();
   }
 
+  // On touch screens a real text box brings up the on-screen keyboard.
+  openNameBox() {
+    const box = document.createElement('input');
+    box.type = 'text';
+    box.maxLength = NAME_MAX;
+    box.value = this.dogName;
+    box.autocomplete = 'off';
+    box.enterKeyHint = 'go';
+    box.setAttribute('aria-label', "Your dog's name");
+    box.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.submitName();
+      }
+    });
+    document.body.append(box);
+    this.nameBox = box;
+    this.nameField.setVisible(false);
+    // Let letters like W, A, S and D reach the text box.
+    this.input.keyboard.disableGlobalCapture();
+    this.placeNameBox();
+    this.scale.on('resize', this.placeNameBox, this);
+  }
+
+  placeNameBox() {
+    const box = this.nameBox;
+    if (!box) return;
+    const r = this.game.canvas.getBoundingClientRect();
+    const s = r.width / W;
+    Object.assign(box.style, {
+      position: 'fixed',
+      left: `${r.left + (W / 2 - 176) * s}px`,
+      top: `${r.top + 234 * s}px`,
+      width: `${352 * s}px`,
+      height: `${52 * s}px`,
+      boxSizing: 'border-box',
+      border: '0',
+      borderRadius: '6px',
+      padding: '0',
+      background: '#ffffff',
+      color: '#2b2024',
+      textAlign: 'center',
+      font: `${Math.max(16, Math.round(28 * s))}px "Pixelify Sans", ui-monospace, monospace`,
+      outline: 'none',
+      zIndex: '6',
+      // The page turns text selection off; a text box needs it back on
+      // (Safari won't let you type otherwise).
+      userSelect: 'text',
+      webkitUserSelect: 'text',
+    });
+  }
+
+  closeNameBox() {
+    if (!this.nameBox) return;
+    this.nameBox.remove();
+    this.nameBox = null;
+    this.scale.off('resize', this.placeNameBox, this);
+    this.input.keyboard.enableGlobalCapture();
+  }
+
+  submitName() {
+    const typed = this.nameBox ? this.nameBox.value : this.dogName;
+    const clean = [...typed].filter((ch) => NAME_CHARS.test(ch)).join('').trim().slice(0, NAME_MAX);
+    this.startGame(clean || this.breed.defaultName);
+  }
+
   closeNaming() {
+    this.closeNameBox();
     this.namingParts.forEach((p) => p.destroy());
     this.mode = 'pick';
     this.skipFrame = true; // so the same Esc press doesn't also leave this screen
@@ -185,10 +250,9 @@ export class ChooseDogScene extends Phaser.Scene {
   }
 
   onKey(event) {
-    if (this.mode !== 'name' || event.repeat) return;
+    if (this.mode !== 'name' || event.repeat || this.nameBox) return;
     if (event.key === 'Enter') {
-      const name = this.dogName.trim() || this.breed.defaultName;
-      this.startGame(name);
+      this.submitName();
     } else if (event.key === 'Escape') {
       this.closeNaming();
     } else if (event.key === 'Backspace') {
@@ -206,6 +270,7 @@ export class ChooseDogScene extends Phaser.Scene {
   }
 
   startGame(name) {
+    this.closeNameBox();
     this.mode = 'starting';
     const save = createNewSave({ name, breedId: this.breed.id, coatId: this.coat.id });
     sfx.bark(this.breed.barkPitch ?? 1);
@@ -216,6 +281,10 @@ export class ChooseDogScene extends Phaser.Scene {
   update() {
     const c = this.controls;
     c.update();
+    const hint = touchInput.active
+      ? 'Tap the arrows to meet each dog, then tap "Pick this dog".'
+      : 'Left / Right: breed     Up / Down: coat color     Enter: pick this dog';
+    if (this.hint.text !== hint) this.hint.setText(hint);
     if (this.mode === 'name') {
       this.updateNameField();
       return;

@@ -2,6 +2,8 @@
 // When it doesn't (for example after clicking somewhere else on the screen),
 // the game pauses and shows a big button to click to keep playing.
 
+import { touchInput } from '../input/touch.js';
+
 const BUTTON_STYLE = {
   position: 'fixed',
   inset: '0',
@@ -14,6 +16,7 @@ const BUTTON_STYLE = {
   cursor: 'pointer',
   font: 'inherit',
   zIndex: '10',
+  touchAction: 'manipulation',
 };
 
 const LABEL_STYLE = {
@@ -54,9 +57,10 @@ export function installFocusGuard(game) {
     window.focus();
     hide();
   });
-  window.addEventListener('blur', () => show('Paused. Click to keep playing'));
+  const verb = () => (touchInput.active ? 'Tap' : 'Click');
+  window.addEventListener('blur', () => show(`Paused. ${verb()} to keep playing`));
   window.addEventListener('focus', () => {
     if (showing) hide();
   });
-  if (!document.hasFocus()) show('Click to play');
+  if (!document.hasFocus()) show(`${verb()} to play`);
 }

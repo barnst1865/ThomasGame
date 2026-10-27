@@ -5,7 +5,9 @@
 import { GAME_WIDTH as W, GAME_HEIGHT as H, COLORS } from '../config.js';
 import { dateFromDay } from '../systems/calendar.js';
 import { DAY_PARTS } from '../data/day.js';
-import { Controls, KEY_LABELS } from '../input/controls.js';
+import { Controls } from '../input/controls.js';
+import { keyLabel } from '../input/labels.js';
+import { touchInput } from '../input/touch.js';
 import { sfx, toggleMute } from '../systems/sfx.js';
 import { UI, textStyle, drawPanel, drawCheckbox, Menu } from '../ui/widgets.js';
 
@@ -37,9 +39,10 @@ export class HudScene extends Phaser.Scene {
     this.buildDialogue();
     this.arrow = this.add.graphics().setDepth(5);
     this.bars = [0, H].map((y) => this.add.rectangle(0, y, W, 54, 0x0d0f14, 1).setOrigin(0, y === 0 ? 0 : 1).setDepth(25).setScale(1, 0));
-    this.help = this.buildHelp();
+    this.help = null;
+    this.input.on('pointerdown', () => this.onTap());
     this.hintText = this.add
-      .text(12, H - 10, `${KEY_LABELS.help}: controls   ${KEY_LABELS.pause}: pause`, textStyle(13, '#f6ecd2'))
+      .text(12, H - 10, `${keyLabel('help')}: controls   ${keyLabel('pause')}: pause`, textStyle(13, '#f6ecd2'))
       .setOrigin(0, 1)
       .setAlpha(0.75)
       .setShadow(1, 1, '#2b2024', 0, false, true);
@@ -47,6 +50,12 @@ export class HudScene extends Phaser.Scene {
 
   isBusy() {
     return this.modal !== null;
+  }
+
+  // Taps (or clicks) move dialogue along and close the help screen.
+  onTap() {
+    if (this.modal === 'dialogue') this.tapped = true;
+    else if (this.modal === 'help' && this.time.now - this.helpOpenedAt > 150) this.closeHelp();
   }
 
   // ------------------------------------------------------------ top bar
@@ -347,7 +356,9 @@ export class HudScene extends Phaser.Scene {
     }
     const typing = this.shown < this.fullText.length;
     this.moreArrow.setVisible(!typing && Math.floor(this.time.now / 350) % 2 === 0);
-    if (this.controls.justPressed('interact') || this.controls.justPressed('pounce')) {
+    const tapped = this.tapped;
+    this.tapped = false;
+    if (tapped || this.controls.justPressed('interact') || this.controls.justPressed('pounce')) {
       if (typing) {
         this.shown = this.fullText.length;
         this.dialogueText.setText(this.fullText);
@@ -361,15 +372,15 @@ export class HudScene extends Phaser.Scene {
 
   buildHelp() {
     const rows = [
-      ['Move', KEY_LABELS.move],
-      ['Run', `hold ${KEY_LABELS.run}`],
-      ['Pick up, talk, sleep', KEY_LABELS.interact],
-      ['Bark', KEY_LABELS.bark],
-      ['Dig or bury', KEY_LABELS.dig],
-      ['Pounce', KEY_LABELS.pounce],
-      ['Pause', KEY_LABELS.pause],
-      ['Sound on or off', KEY_LABELS.mute],
+      ['Move', keyLabel('move')],
+      ['Run', keyLabel('run')],
+      ['Pick up, talk, sleep', keyLabel('interact')],
+      ['Bark', keyLabel('bark')],
+      ['Dig or bury', keyLabel('dig')],
+      ['Pounce', keyLabel('pounce')],
+      ['Pause', keyLabel('pause')],
     ];
+    if (!touchInput.active) rows.push(['Sound on or off', keyLabel('mute')]);
     const pw = 460;
     const ph = 110 + rows.length * 32;
     const x = (W - pw) / 2;
@@ -383,13 +394,17 @@ export class HudScene extends Phaser.Scene {
       parts.push(this.add.text(x + 40, ry, what, textStyle(18)));
       parts.push(this.add.text(x + pw - 40, ry, key, textStyle(18, COLORS.woodDark, { fontStyle: 'bold' })).setOrigin(1, 0));
     });
-    parts.push(this.add.text(W / 2, y + ph - 24, 'Press H or Esc to close', textStyle(14, COLORS.woodDark)).setOrigin(0.5));
+    const close = touchInput.active ? 'Tap anywhere to close' : 'Press H or Esc to close';
+    parts.push(this.add.text(W / 2, y + ph - 24, close, textStyle(14, COLORS.woodDark)).setOrigin(0.5));
     return this.add.container(0, 0, parts).setDepth(40).setVisible(false);
   }
 
+  // Built fresh each time, so it shows keys or touch buttons, whichever
+  // the player is using right now.
   openHelp() {
+    this.help?.destroy();
+    this.help = this.buildHelp().setVisible(true);
     this.modal = 'help';
-    this.help.setVisible(true);
     this.helpOpenedAt = this.time.now;
   }
 
@@ -540,6 +555,7 @@ export class HudScene extends Phaser.Scene {
         }
     }
 
+    this.hintText.setVisible(!touchInput.active && !this.cinematic);
     this.updateTopBar();
     this.updateTasks();
     this.fadePanels();

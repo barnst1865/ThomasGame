@@ -7,6 +7,8 @@ import { ChooseDogScene } from './scenes/ChooseDogScene.js';
 import { FarmScene } from './scenes/FarmScene.js';
 import { HudScene } from './scenes/HudScene.js';
 import { installFocusGuard } from './ui/focusGuard.js';
+import { installTouchControls } from './ui/touchControls.js';
+import { watchForTouch } from './input/touch.js';
 
 async function waitForFont() {
   // Text is drawn onto canvases, so the pixel font has to be ready first.
@@ -31,5 +33,7 @@ const game = new Phaser.Game({
   scene: [BootScene, TitleScene, ChooseDogScene, FarmScene, HudScene],
 });
 
+watchForTouch();
+installTouchControls();
 installFocusGuard(game);
 globalThis.pawsGame = game;

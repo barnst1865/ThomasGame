@@ -32,15 +32,20 @@ listed in the top right corner.
 If you click outside the game, it pauses and shows a "Click to keep playing"
 button (the game can only hear the keyboard while it has focus).
 
-| Action                   | Keys              |
-| ------------------------ | ----------------- |
-| Move                     | WASD or arrows    |
-| Run                      | hold Shift        |
-| Pick up, talk, sleep     | E (or Enter)      |
-| Bark                     | Q (or B)          |
-| Dig or bury              | F                 |
-| Pounce                   | Space             |
-| Controls / pause / sound | H / Esc / M       |
+| Action                   | Keyboard       | Phone or tablet                    |
+| ------------------------ | -------------- | ---------------------------------- |
+| Move                     | WASD or arrows | Joystick (put a thumb on the left) |
+| Run                      | hold Shift     | Push the joystick all the way      |
+| Pick up, talk, sleep     | E (or Enter)   | Use                                |
+| Bark                     | Q (or B)       | Bark                               |
+| Dig or bury              | F              | Dig                                |
+| Pounce                   | Space          | Pounce                             |
+| Controls / pause / sound | H / Esc / M    | ? / II / (none)                    |
+
+On a phone or tablet, tap to move dialogue along and to pick things in
+menus. The game is easiest to see with the device turned sideways. The
+on-screen buttons appear by themselves once you touch the screen and hide
+again if you press a key on a keyboard.
 
 ### The dogs
 
@@ -105,11 +110,22 @@ The art is drawn in code: characters are small text grids where each letter
 is a color (see `src/art/dogSprites.js`). Scenery is drawn pixel by pixel in
 `src/art/scenery.js`.
 
-### Adding touch controls later
+### Keyboard and touch controls
 
-The game never reads keys directly. It asks `Controls` for actions like
-"bark" or "dig". A touch-screen joystick and buttons only need to call
-`controls.setVirtualMove(x, y)` and `controls.setVirtual('bark', true)`.
+The game never reads keys directly. It asks `Controls`
+(`src/input/controls.js`) for actions like "bark" or "dig". The on-screen
+joystick and buttons (`src/ui/touchControls.js`) feed the same actions
+through `src/input/touch.js`, so every scene works with either. Names
+shown to the player ("press F" or "tap Dig") come from
+`src/input/labels.js`.
+
+## Keeping it out of search engines
+
+`robots.txt` asks every search engine and AI crawler not to visit the site,
+and each page has a `noindex` tag. Well-behaved crawlers (Google, Bing,
+OpenAI, Anthropic, Common Crawl and others) follow these. Nothing can stop a
+badly behaved scraper from reading a public website, though, and the code
+itself is on GitHub, which this file can't control.
 
 ## Credits
 

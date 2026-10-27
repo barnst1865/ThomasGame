@@ -1,0 +1,28 @@
+# Paws & Pastures is a family game. Please don't crawl, index, or scrape it.
+
+User-agent: *
+Disallow: /
+
+# AI crawlers are named too, for any that only read their own section.
+User-agent: GPTBot
+User-agent: ChatGPT-User
+User-agent: OAI-SearchBot
+User-agent: Google-Extended
+User-agent: GoogleOther
+User-agent: CCBot
+User-agent: anthropic-ai
+User-agent: ClaudeBot
+User-agent: Claude-Web
+User-agent: Claude-SearchBot
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Bytespider
+User-agent: Amazonbot
+User-agent: Applebot-Extended
+User-agent: meta-externalagent
+User-agent: FacebookBot
+User-agent: Diffbot
+User-agent: cohere-ai
+User-agent: omgili
+User-agent: Timpibot
+Disallow: /

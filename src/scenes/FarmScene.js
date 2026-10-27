@@ -24,7 +24,10 @@ import { dateFromDay, formatDate, lighting } from '../systems/calendar.js';
 import { writeSave } from '../systems/saveGame.js';
 import { insideRect } from '../systems/steering.js';
 import { sfx } from '../systems/sfx.js';
-import { Controls, KEY_LABELS } from '../input/controls.js';
+import { Controls } from '../input/controls.js';
+import { keyLabel, howTo } from '../input/labels.js';
+import { touchInput } from '../input/touch.js';
+import { setTouchGameplay } from '../ui/touchControls.js';
 
 const NIGHT_SCALE = 4;
 const inset = (r, n) => ({ x: r.x + n, y: r.y + n, w: r.w - n * 2, h: r.h - n * 2 });
@@ -102,6 +105,7 @@ export class FarmScene extends Phaser.Scene {
     this.scene.launch('Hud', { farm: this });
     this.hud = this.scene.get('Hud');
     this.events.once('shutdown', () => {
+      setTouchGameplay(false);
       this.anims.resumeAll();
       this.scene.stop('Hud');
     });
@@ -257,6 +261,9 @@ export class FarmScene extends Phaser.Scene {
 
   morning() {
     const name = this.save.dog.name;
+    if (touchInput.active && window.innerHeight > window.innerWidth) {
+      this.hintOnce('sideways', 'Tip: turn your device sideways for a bigger view.');
+    }
     if (!this.save.flags.metFarmer) {
       this.dog.facing = 'right';
       this.farmer.talking = true;
@@ -308,6 +315,7 @@ export class FarmScene extends Phaser.Scene {
     const frozen = !this.hud?.sys.isActive() || this.hud.isBusy() || this.sleeping;
     const busy = frozen || this.cutscene;
     this.controls.enabled = !busy;
+    setTouchGameplay(!busy);
     if (frozen !== Boolean(this.animsFrozen)) {
       if (frozen) this.anims.pauseAll();
       else this.anims.resumeAll();
@@ -634,10 +642,10 @@ export class FarmScene extends Phaser.Scene {
 
   buildPrompts(interaction) {
     const prompts = [];
-    if (interaction) prompts.push({ key: KEY_LABELS.interact, label: interaction.label });
+    if (interaction) prompts.push({ key: keyLabel('interact'), label: interaction.label });
     if (this.dog.carrying?.kind === 'bone' && this.dog.mode === 'normal') {
       const { tx, ty } = this.digTarget();
-      if (this.canDigAt(tx, ty)) prompts.push({ key: KEY_LABELS.dig, label: 'Bury your bone here' });
+      if (this.canDigAt(tx, ty)) prompts.push({ key: keyLabel('dig'), label: 'Bury your bone here' });
     }
     return prompts;
   }
@@ -645,7 +653,7 @@ export class FarmScene extends Phaser.Scene {
   pickUp(item) {
     this.dog.carry(item);
     sfx.pickup();
-    if (item.kind === 'bone') this.hintOnce('bone', `Find a nice patch of grass and press ${KEY_LABELS.dig} to bury your bone.`);
+    if (item.kind === 'bone') this.hintOnce('bone', `Find a nice patch of grass and ${howTo('dig')} to bury your bone.`);
     if (item.kind === 'egg') this.hintOnce('egg-carry', 'Bring the egg to the basket on the porch.');
     if (item.kind === 'ball') this.hintOnce('ball-carry', `Bring the ball back to ${FARMER_NAME}.`);
   }

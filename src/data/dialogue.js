@@ -1,4 +1,7 @@
-// What Farmer Hazel says. `{name}` is replaced with your dog's name.
+// What Farmer Hazel says. `{name}` is replaced with your dog's name, and
+// `{press dig}` with "press F" or "tap Dig" (keyboard or touch screen).
+
+import { fillControls } from '../input/labels.js';
 
 export const FARMER_NAME = 'Farmer Hazel';
 
@@ -6,9 +9,9 @@ export const LINES = {
   firstMorning: [
     'Good morning, {name}! Did you sleep well?',
     "Every morning we let the sheep out to graze. Run up behind them and they'll walk away from you, right out the gate!",
-    'The hens lay eggs by the coop. Press E to pick one up and bring it to the basket on the porch.',
-    'And here is a bone, just for you. Press F to dig a hole and hide it!',
-    "Once the morning jobs are done, it's play time. Your jobs are always listed in the corner, and H shows the controls.",
+    'The hens lay eggs by the coop. {Press interact} to pick one up and bring it to the basket on the porch.',
+    'And here is a bone, just for you. {Press dig} to dig a hole and hide it!',
+    "Once the morning jobs are done, it's play time. Your jobs are always listed in the corner. If you get stuck, {press help} to see the controls.",
   ],
   goodMorning: [
     ['Morning, {name}! Sheep out, eggs in, and a bone for you to hide.'],
@@ -24,12 +27,12 @@ export const LINES = {
   hints: {
     sheepOut: "The sheep want to graze! Go into the pen, get behind them, and push them out through the gate.",
     collectEggs: 'There are still eggs by the coop. Bring them to the basket on the porch.',
-    buryBone: "Don't forget your bone! Pick it up, then press F on some grass to bury it.",
+    buryBone: "Don't forget your bone! Pick it up, then {press dig} on some grass to bury it.",
     fetch: 'Bring the ball back and I will throw it again!',
-    herdSheep: 'Time for the sheep to come home. Get behind them and push them back through the gate. Barking (Q) helps!',
-    chaseCrows: 'Crows on my crops! Run at them or bark (Q) to scare them off.',
+    herdSheep: 'Time for the sheep to come home. Get behind them and push them back through the gate. Barking helps!',
+    chaseCrows: 'Crows on my crops! Run at them or bark to scare them off.',
     dinner: "Dinner's ready! Come sit with me on the porch.",
-    guardCoop: 'Be careful out there. Bark at the weasel, then pounce with Space!',
+    guardCoop: 'Be careful out there. Bark at the weasel, then pounce on it!',
     goToBed: "You've done everything. Off to bed, {name}!",
   },
   allDone: ['All done for now. You are the best dog on the farm!', "What a helper! I should get you a little hat."],
@@ -58,7 +61,7 @@ export const LINES = {
 };
 
 export function fill(text, name) {
-  return text.replaceAll('{name}', name);
+  return fillControls(text.replaceAll('{name}', name));
 }
 
 export function pick(list) {

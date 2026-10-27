@@ -9,7 +9,7 @@ A cozy farming game where you play as the farmer's dog.
 | Platform | Web browser |
 | Art style | Top-down pixel art |
 | Player | The farmer's dog |
-| Controls | Keyboard first, built so mobile/touch controls can be added later |
+| Controls | Keyboard, plus an on-screen joystick and buttons on phones and tablets |
 | Time | No clock: each day is a series of parts that end when their jobs are done, plus four seasons |
 | Saving | Auto-save each night when the dog goes to sleep (stored in the browser) |
 
@@ -76,6 +76,10 @@ with a "Click to keep playing" button when it loses keyboard focus, and any
 key or a click wakes the dog up in the morning. Seasons change the farm's
 colors and crops (pumpkins in fall, snow in winter).
 
+Phones and tablets get an on-screen joystick and Use, Bark, Dig and Pounce
+buttons. The site asks search engines and AI crawlers to stay away
+(`robots.txt` and `noindex`).
+
 ## Ideas for next versions
 
 - More fun-break activities to choose from: chase butterflies, splash in
@@ -89,5 +93,4 @@ colors and crops (pumpkins in fall, snow in winter).
 - Mystical beings, some friendly (a forest spirit) and some not.
 - Tug and nip moves to go with pounce.
 - Digging up the farmer's lost things to deliver for rewards.
-- Touch controls for tablets and phones (the input layer is ready for it).
 - Music.

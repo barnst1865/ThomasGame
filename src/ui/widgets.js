@@ -106,3 +106,13 @@ export class Menu {
     });
   }
 }
+
+// A button you can click or tap. Returns its parts so they can be destroyed.
+export function textButton(scene, x, y, label, onClick, { width = 200, height = 42, size = 20, fill = UI.paper } = {}) {
+  const g = scene.add.graphics();
+  drawPanel(g, x - width / 2, y - height / 2, width, height, { fill, radius: 10 });
+  const text = scene.add.text(x, y, label, textStyle(size, '#2b2024', { fontStyle: 'bold' })).setOrigin(0.5);
+  const zone = scene.add.zone(x, y, width, height).setInteractive({ useHandCursor: true });
+  zone.on('pointerdown', () => onClick());
+  return [g, text, zone];
+}

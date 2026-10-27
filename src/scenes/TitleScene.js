@@ -9,6 +9,7 @@ import { loadSave, deleteSave } from '../systems/saveGame.js';
 import { dateFromDay } from '../systems/calendar.js';
 import { Controls } from '../input/controls.js';
 import { sfx } from '../systems/sfx.js';
+import { touchInput } from '../input/touch.js';
 import { textStyle, drawPanel, Menu } from '../ui/widgets.js';
 
 export class TitleScene extends Phaser.Scene {
@@ -41,10 +42,7 @@ export class TitleScene extends Phaser.Scene {
     this.add.sprite(W / 2, 292, key, 'side-stand-0').setOrigin(0.5, 1).setScale(6).play(`${key}:idle-side`);
 
     this.showMainMenu();
-    this.add
-      .text(W / 2, H - 22, 'Arrow keys to choose, Enter to pick. You can click too.', textStyle(15, COLORS.paperDark))
-      .setOrigin(0.5)
-      .setShadow(0, 2, '#1d2a1f', 0, false, true);
+    this.hint = this.add.text(W / 2, H - 22, '', textStyle(15, COLORS.paperDark)).setOrigin(0.5).setShadow(0, 2, '#1d2a1f', 0, false, true);
     this.cameras.main.fadeIn(500);
   }
 
@@ -121,6 +119,8 @@ export class TitleScene extends Phaser.Scene {
   update() {
     const c = this.controls;
     c.update();
+    const hint = touchInput.active ? 'Tap a button to start.' : 'Arrow keys to choose, Enter to pick. You can click too.';
+    if (this.hint.text !== hint) this.hint.setText(hint);
     if (!this.menu) return;
     if (c.justPressed('up')) {
       this.menu.move(-1);
