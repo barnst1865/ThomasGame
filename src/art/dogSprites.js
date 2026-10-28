@@ -7,6 +7,10 @@
 //   p tongue      k collar    a ear          i inner ear
 //   t tail        T tail tip
 //
+// Things the dog can wear are drawn on top (see NECKWEAR and HATS below):
+//   q bandana     Q bandana shade
+//   r hat         R hat band or jewel   y hat trim
+//
 // The "side" pictures face right; facing left is the same picture mirrored.
 
 import { compose, darken } from './pixelArt.js';
@@ -209,6 +213,43 @@ const SLEEP = [
   '................',
 ];
 
+// Bandanas, by view. They sit over the collar and hang down the chest.
+const NECKWEAR = {
+  front: pad(['.....q....q.....', '....qqqqqqqq....', '.....qQQQQq.....', '......qQQq......', '.......qq.......'], 8),
+  side: pad(['..........qqqq..', '...........qQq..', '...........qq...'], 8),
+  back: pad(['.....qqqqqq.....', '.......qQ.......'], 8),
+};
+
+// Hats, by view. The back view uses the front picture.
+const HATS = {
+  straw: {
+    front: ['......oooo......', '.....oRRRRo.....', '...oorrrrrroo...'],
+    side: ['..........oooo..', '..........oRRo..', '........oorrrroo'],
+  },
+  beanie: {
+    front: ['......oyyo......', '.....orrrro.....', '....orrrrrro....', '....oRRRRRRo....'],
+    side: ['..........oyo...', '.........orrro..', '.........orrrro.', '.........oRRRRo.'],
+  },
+  party: {
+    front: ['.......oo.......', '......oyro......', '.....oryryo.....'],
+    side: ['...........oo...', '..........oyro..', '.........oryryo.'],
+  },
+  crown: {
+    front: ['.....y.yy.y.....', '.....rrrrrr.....', '....orRrrRro....'],
+    side: ['..........y.y.y.', '..........rrrrr.', '.........orRrRro'],
+  },
+};
+
+export const HAT_COLORS = {
+  straw: { r: '#e8c66c', R: '#c0504d' },
+  beanie: { r: '#3f6fd4', R: '#2a4a8a', y: '#f6ecd2' },
+  party: { r: '#e25d6a', y: '#f2d23a' },
+  crown: { r: '#f2c84b', R: '#e25d6a', y: '#fff3b0' },
+};
+
+export const BANDANAS = { red: '#d4483f', blue: '#3f6fd4', green: '#3f9c55', rainbow: null };
+const RAINBOW = ['#e25d6a', '#f2a93b', '#f2d23a', '#5fbf4f', '#3f6fd4', '#8a5ad4'];
+
 const BLANK = Array(16).fill('................');
 const DIRS = { side: SIDE, down: FRONT, up: BACK };
 const VIEW = { side: 'side', down: 'front', up: 'back' };
@@ -226,16 +267,24 @@ export function dogFrameName(dir, pose, tail) {
   return pose === 'sleep' ? 'sleep' : `${dir}-${pose}-${tail}`;
 }
 
-export function dogPicture(breed, dir, pose, tailPos) {
+// `look` says what the dog is wearing: { collar, neck, hat }.
+export function dogPicture(breed, dir, pose, tailPos, look = {}) {
   if (pose === 'sleep') {
     return breed.tail === 'none' ? SLEEP.map((r) => r.replaceAll('t', 'c')) : SLEEP;
   }
   const view = VIEW[dir];
   const ears = EARS[breed.ears]?.[view];
   const tail = TAILS[breed.tail]?.[view]?.[tailPos];
+  const neck = look.neck ? NECKWEAR[view] : null;
+  const hat = look.hat ? HATS[look.hat]?.[view === 'side' ? 'side' : 'front'] : null;
   // Tails sit behind the body in front view, on top otherwise.
-  if (view === 'front') return compose(BLANK, tail, DIRS[dir][pose], ears);
-  return compose(DIRS[dir][pose], ears, tail);
+  if (view === 'front') return compose(BLANK, tail, DIRS[dir][pose], ears, neck, hat);
+  return compose(DIRS[dir][pose], ears, tail, neck, hat);
+}
+
+// Accepts the old way (just a collar color) or a full look.
+export function lookOf(look) {
+  return typeof look === 'string' ? { collar: look, neck: null, hat: null } : { collar: 'red', neck: null, hat: null, ...look };
 }
 
 const FIXED = {
@@ -245,10 +294,11 @@ const FIXED = {
   w: '#ffffff',
 };
 
-export const COLLARS = { red: '#d4483f', blue: '#3f6fd4', green: '#3f9c55', yellow: '#e2b33c' };
+export const COLLARS = { red: '#d4483f', blue: '#3f6fd4', green: '#3f9c55', yellow: '#e2b33c', purple: '#8a5ad4', gold: '#f2c84b' };
 
-// Builds the color lookup for one breed + coat.
-export function dogColors(coat, collar = 'red') {
+// Builds the color lookup for one breed + coat, wearing `look`.
+export function dogColors(coat, look = 'red') {
+  const { collar, neck, hat } = lookOf(look);
   const p = coat.palette;
   const c = p.coat;
   const map = {
@@ -265,10 +315,13 @@ export function dogColors(coat, collar = 'red') {
     t: p.tail ?? c,
     T: p.tailTip ?? p.tail ?? c,
     k: COLLARS[collar] ?? COLLARS.red,
+    ...(neck && BANDANAS[neck] ? { q: BANDANAS[neck], Q: darken(BANDANAS[neck], 0.2) } : {}),
+    ...(hat ? HAT_COLORS[hat] : {}),
     ...FIXED,
   };
   const speckle = coat.speckle;
   return (ch, x, y) => {
+    if (neck === 'rainbow' && (ch === 'q' || ch === 'Q')) return RAINBOW[(y + x) % RAINBOW.length];
     if (speckle && (ch === 'c' || ch === 'h' || ch === 't') && hash2(x, y, 7) < speckle.chance) {
       return speckle.color;
     }

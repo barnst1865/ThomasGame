@@ -10,6 +10,9 @@ import { keyLabel } from '../input/labels.js';
 import { touchInput } from '../input/touch.js';
 import { sfx, toggleMute } from '../systems/sfx.js';
 import { UI, textStyle, drawPanel, drawCheckbox, Menu } from '../ui/widgets.js';
+import { ShopScreen } from '../ui/ShopScreen.js';
+import { ToyBoxScreen } from '../ui/ToyBoxScreen.js';
+import { nextShelf } from '../data/shop.js';
 
 const TYPE_SPEED = 55; // letters per second in dialogue
 
@@ -74,10 +77,11 @@ export class HudScene extends Phaser.Scene {
     this.lastPartKey = '';
   }
 
+  // Top right: treats (and how close the next shop shelf is) and hearts.
   buildStats() {
     const g = this.add.graphics();
     const x = W - 12 - 196;
-    drawPanel(g, x, 12, 196, 66);
+    drawPanel(g, x, 12, 196, 84);
     const icon = this.add.image(x + 28, 32, 'treat').setScale(2.5);
     this.treatText = this.add.text(x + 52, 19, '', textStyle(22));
     const label = this.add.text(x + 112, 23, 'treats', textStyle(15, COLORS.woodDark));
@@ -85,8 +89,25 @@ export class HudScene extends Phaser.Scene {
     for (let i = 0; i < 10; i++) {
       this.hearts.push(this.add.image(x + 22 + i * 17, 59, 'heart-empty').setScale(2));
     }
-    this.statsBox = this.add.container(0, 0, [g, icon, this.treatText, label, ...this.hearts]);
-    this.statsBox.rect = { x, y: 12, w: 196, h: 66 };
+    this.shelfBar = this.add.graphics();
+    this.shelfText = this.add.text(x + 16, 72, '', textStyle(12, COLORS.woodDark));
+    this.statsBox = this.add.container(0, 0, [g, icon, this.treatText, label, ...this.hearts, this.shelfBar, this.shelfText]);
+    this.statsBox.rect = { x, y: 12, w: 196, h: 84 };
+  }
+
+  updateShelf(treats) {
+    const x = W - 12 - 196;
+    const next = nextShelf(treats);
+    const g = this.shelfBar.clear();
+    if (!next) {
+      this.shelfText.setText('Every shop shelf is open!');
+      return;
+    }
+    this.shelfText.setText(`Next shelf ${treats}/${next.treats}`);
+    const bx = x + 150;
+    const bw = 30;
+    g.fillStyle(UI.woodDark, 1).fillRect(bx, 76, bw, 8);
+    g.fillStyle(0xf2a93b, 1).fillRect(bx + 1, 77, Math.round((bw - 2) * Math.min(1, treats / next.treats)), 6);
   }
 
   // Panels fade out when the dog (or trouble) is behind them.
@@ -128,6 +149,7 @@ export class HudScene extends Phaser.Scene {
     if (key !== this.lastStatsKey) {
       this.lastStatsKey = key;
       this.treatText.setText(String(farm.save.treats));
+      this.updateShelf(farm.save.treats);
       const full = Math.floor(farm.save.friendship.farmer / 10);
       this.hearts.forEach((h, i) => h.setTexture(i < full ? 'heart' : 'heart-empty'));
     }
@@ -148,7 +170,7 @@ export class HudScene extends Phaser.Scene {
       this.taskBox.rect = null;
       return;
     }
-    const y = 100;
+    const y = 106;
     const lineH = 26;
     const h = 40 + tasks.length * lineH;
     const heading = `${this.farm.plan.part.name} jobs`;
@@ -445,6 +467,52 @@ export class HudScene extends Phaser.Scene {
     this.modal = null;
   }
 
+  // ------------------------------------------------- shop and toy box
+
+  openShop(data, onDone) {
+    this.modal = 'shop';
+    this.screen = new ShopScreen(this, data, (result) => {
+      this.screen = null;
+      this.modal = null;
+      onDone(result);
+    });
+  }
+
+  openToyBox(data, onChange, onClose) {
+    this.modal = 'toybox';
+    this.screen = new ToyBoxScreen(this, data, onChange, () => {
+      this.screen = null;
+      this.modal = null;
+      onClose?.();
+    });
+  }
+
+  // A card that pops up for a moment: a new present or a new thing to wear.
+  showCard(iconKey, title, text) {
+    const w = 440;
+    const h = 92;
+    const g = drawPanel(this.add.graphics(), -w / 2, -h / 2, w, h, { radius: 10, fill: 0xfff3c4 });
+    const parts = [g];
+    let tx = -w / 2 + 24;
+    if (iconKey) {
+      const icon = this.add.image(-w / 2 + 52, 0, iconKey);
+      icon.setScale(Math.max(1, Math.floor(64 / Math.max(icon.width, icon.height))));
+      parts.push(icon);
+      tx = -w / 2 + 96;
+    }
+    parts.push(this.add.text(tx, -26, title, textStyle(20, COLORS.ink, { fontStyle: 'bold' })));
+    parts.push(this.add.text(tx, 4, text, textStyle(15, COLORS.woodDark, { wordWrap: { width: w / 2 - tx - 18 } })));
+    const card = this.add.container(W / 2, H - 130, parts).setDepth(30).setAlpha(0).setScale(0.8);
+    this.tweens.chain({
+      targets: card,
+      tweens: [
+        { alpha: 1, scale: 1, duration: 280, ease: 'Back.Out' },
+        { alpha: 1, duration: 3800 },
+        { alpha: 0, y: H - 150, duration: 400, onComplete: () => card.destroy() },
+      ],
+    });
+  }
+
   // --------------------------------------------------------- end of day
 
   // A big title card when a new part of the day begins.
@@ -554,6 +622,10 @@ export class HudScene extends Phaser.Scene {
       }
       case 'sleep':
         if (this.onWake && (c.justPressed('interact') || c.justPressed('pounce'))) this.onWake();
+        break;
+      case 'shop':
+      case 'toybox':
+        this.screen?.update(c);
         break;
       default:
         if (!this.farm.sleeping) {

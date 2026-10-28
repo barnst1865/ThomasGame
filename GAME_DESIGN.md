@@ -33,7 +33,7 @@ A cozy farming game where you play as the farmer's dog.
 
 ## Rewards
 
-- **Treats:** currency, spent or saved.
+- **Treats:** earned for jobs. The total unlocks shelves at the shop on wheels; treats are never spent.
 - **Dog gear:** collars, bandanas, hats, dog beds.
 - **New areas:** pond, woods, town, etc.
 - **Friendship:** the farmer and animals grow fond of the dog over time.
@@ -98,10 +98,41 @@ missed but nobody is hurt.
   follows the dog for the night, lights the way, drifts toward the nearest
   trouble, and makes the dog's bark carry 50% farther.
 
+## Visitors and rewards
+
+| Who | When | What happens |
+|---|---|---|
+| Mo the mail carrier | Every 3 days from day 3 (not day 15, saved for a special letter) | Leaves a package by the mailbox. Bring it to Farmer Hazel; she opens a present that helps with jobs |
+| The Wagtail Wagon (Penny) | Every 4 days from day 4, at sunset | After dinner, Farmer Hazel buys the dog one reward |
+
+- **Presents (in order):** Squeaky Ball, Zoomy Booties, Super Sniffer,
+  Herding Bell, Magnifying Glass, Glow Tag, Bark Booster, Digging Mitts.
+  After the last one, packages hold a box of treats.
+- **Shop shelves** open by total treats earned (treats are never spent):
+  collars (0), bandanas and dog beds (100), hats and doghouse roof paint
+  (250), fancy things (450).
+- **The toy box** by the doghouse changes what the dog wears and shows the
+  presents.
+- All character names live in one file (`src/data/characters.js`) so the
+  class can rename them.
+
+## Story plan
+
+1. Visitors and rewards (built: mail, shop, toy box).
+2. Farm friends: Pickles the cat hides your dinner bowl; Sir Cluckington
+   the rooster hands out mischief jobs (washing line, Farmer Hazel's hat,
+   muddy paw prints).
+3. Duke, the show dog from next door, arrives on day 3. Four contests on
+   days 5, 8, 11 and 14 (fetch race, egg hunt, treasure dig-off, herding
+   trial). Duke becomes a friend win or lose.
+4. The Goldsby plan (days 15 to 28): a letter, a weird truck to
+   investigate, Mr. Goldsby's plans for the farm, missions to stop him,
+   and a finale where all your friends help.
+
 ## Status
 
-**Version 0.3 is built.** The task-driven day above works from start to
-finish, with nine special activities taking turns, four kinds of prowler,
+**Version 0.4 is built.** Mail, presents, the shop on wheels and the toy
+box work. The task-driven day above works from start to finish, with nine special activities taking turns, four kinds of prowler,
 and the will-o'-wisps from night 4 on. The game pauses
 with a "Click to keep playing" button when it loses keyboard focus, and any
 key or a click wakes the dog up in the morning. Seasons change the farm's
@@ -114,10 +145,8 @@ buttons. The site asks search engines and AI crawlers to stay away
 ## Ideas for next versions
 
 - More fun-break activities to choose from: free time to explore.
-- A shop where treats buy dog gear (collars, bandanas, hats, beds).
-  Collar colors are already supported in the dog sprites.
-- New areas: the woods trail on the east edge and the road to town (the
-  gate on the south fence is already there).
+- New areas: the woods trail on the east edge and the town at the end of
+  the road.
 - More animals: cows, pigs and the farm cat.
 - More mystical beings, like a forest spirit that protects the farm.
 - Friendship with the golden wisp that grows over many nights.

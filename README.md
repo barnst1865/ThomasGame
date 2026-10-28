@@ -61,6 +61,25 @@ If a prowler gets what it came for, the job is missed, but nobody gets
 hurt and there's always tomorrow night. Arrows at the edge of the screen
 point to trouble you can't see.
 
+### Visitors, presents and rewards
+
+- **Mo the mail carrier** walks up the road every 3 days (from day 3) and
+  leaves a package by the mailbox. Bring it to Farmer Hazel and she opens
+  a present that helps for the rest of the game: a squeaky ball (easier
+  catches), zoomy booties (faster running), a super sniffer (smell buried
+  things from farther away), a herding bell, a magnifying glass (hidden
+  things sparkle), a glow tag (see more at night), a bark booster and
+  digging mitts. Barking at Mo is allowed. He jumps every time.
+- **The Wagtail Wagon**, a shop on wheels run by Penny, parks by the road
+  at sunset every 4 days (from day 4). After dinner, go over with Farmer
+  Hazel and pick one reward. Treats are never spent: the more treats
+  you've earned in total, the more shelves are open (collars at the start,
+  then bandanas and dog beds at 100 treats, hats and doghouse roof paint
+  at 250, and fancy things at 450). The treat box in the corner shows how
+  close the next shelf is.
+- **Your toy box**, next to the doghouse, is where you change your
+  collar, bandana, hat, dog bed and doghouse roof, and see your presents.
+
 Sheep (and runaway hens) walk away from you, so to herd them, get on the
 far side and push.
 Your buried bones stay hidden day after day. Jobs earn treats and
@@ -107,6 +126,11 @@ Any static web server works too (for example `python3 -m http.server`). The
 page has to be served over http, because browsers won't load the game's
 JavaScript modules straight from a file.
 
+## Changing names
+
+Every character's name is in `src/data/characters.js`. Change one there and
+it changes everywhere: jobs, dialogue and menus.
+
 ## Changing the day
 
 The parts of the day, their everyday jobs and the special activities that
@@ -114,6 +138,8 @@ take turns are listed in `src/data/day.js`. Who visits at night (and how
 tough each prowler is) is in `src/data/nights.js`. The jobs themselves
 (names and rewards) are in `src/data/tasks.js`. Numbers like how many crows
 come or how many times Farmer Hazel throws the ball are in `src/config.js`.
+When the mail and the shop come is in `src/data/events.js`, the presents
+are in `src/data/gifts.js`, and the shop's shelves in `src/data/shop.js`.
 
 ## Adding a new dog breed
 
@@ -133,13 +159,15 @@ index.html, style.css   the page
 src/main.js             starts Phaser
 src/config.js           numbers for tuning (speeds, day length, ...)
 src/scenes/             title, choose your dog, the farm, the HUD on top
-src/entities/           the dog, sheep, hens, farmer, prowlers, crows, hawk,
-                        butterflies, wisps, items
+src/entities/           the dog, sheep, hens, farmer, visitors, prowlers,
+                        crows, hawk, butterflies, wisps, items
 src/activities/         each special activity (fetch, butterflies, pond day,
-                        lost things, strays, crows, hawk, dinner) and the
-                        night watch
+                        lost things, strays, crows, hawk, dinner), the mail,
+                        the shop van and the night watch
+src/ui/                 menus and screens (shop, toy box, touch buttons)
 src/systems/            the day plan, seasons, saving, jobs, sounds, movement math
-src/data/               breeds, the parts of the day, nights, jobs, the farmer's lines
+src/data/               names, breeds, the parts of the day, nights, visitors,
+                        presents, the shop, jobs, the farmer's lines
 src/world/              the farm's layout and building it on screen
 src/art/                all the pixel art, drawn with code
 src/input/controls.js   keys mapped to actions

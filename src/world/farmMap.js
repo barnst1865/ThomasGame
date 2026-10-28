@@ -46,7 +46,7 @@ export const AREAS = {
   pasture: rect(14, 18, 22, 12), // where loose sheep like to wander
   fetchField: rect(11, 10, 12, 5), // where Farmer Hazel throws the ball (and butterflies flutter)
   lostThings: rect(5, 10, 26, 9), // where Farmer Hazel's lost things turn up
-  southGate: rect(22, 32, 3, 1),
+  road: rect(22, 31, 3, 3), // the road to town, where visitors come in
 };
 
 // Spots characters walk to or interact with (in pixels).
@@ -74,7 +74,18 @@ export const POINTS = {
   basketSteal: { x: px(13) + 4, y: px(9) + 4 },
   meadowPath: { x: px(16) + 8, y: px(16) + 8 },
   penGateOutside: { x: px(15) + 8, y: px(24) + 8 },
+  // Visitors: where they come in, and where they stop.
+  roadIn: { x: px(23) + 8, y: px(31) + 8 },
+  mailStop: { x: px(9) + 8, y: px(16) + 8 },
+  packageDrop: { x: px(8) + 8, y: px(16) + 6 },
+  vanPark: { x: px(23) + 8, y: px(29) + 12 },
+  shopkeeper: { x: px(26) + 4, y: px(29) + 10 },
+  shopFarmer: { x: px(20) + 4, y: px(29) + 10 },
+  toyBox: { x: px(14) + 8, y: px(8) - 2 },
 };
+
+// Where the road leaves the map, toward town (visitors appear and vanish here).
+export const ROAD_END = { x: px(23) + 8, y: px(MAP_H) + 28 };
 
 // Where a runaway hen or a lost lamb might turn up (in pixels).
 export const STRAY_SPOTS = {
@@ -158,8 +169,8 @@ export function buildFarm() {
   fill(tiles, AREAS.penGate, T.GATE);
   fill(tiles, AREAS.trough, T.BUILDING);
 
-  // The road to town is fenced off for now (a future area!).
-  fill(tiles, AREAS.southGate, T.FENCE);
+  // The road to town, through a gap in the trees.
+  fill(tiles, AREAS.road, T.PATH);
 
   // A few shade trees around the yard.
   for (const [x, y] of [

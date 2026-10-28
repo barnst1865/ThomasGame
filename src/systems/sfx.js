@@ -114,6 +114,10 @@ export const sfx = {
   blip() {
     tone({ freq: 880, type: 'square', duration: 0.04, volume: 0.03 });
   },
+  honk() {
+    tone({ freq: 392, type: 'square', duration: 0.12, volume: 0.05 });
+    tone({ freq: 392, type: 'square', start: 0.18, duration: 0.16, volume: 0.05 });
+  },
   splash() {
     noise({ duration: 0.3, volume: 0.07, filter: 1100 });
     tone({ freq: 260, to: 140, type: 'sine', duration: 0.2, volume: 0.05 });

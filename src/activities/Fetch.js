@@ -126,7 +126,8 @@ export class FetchGame {
   landed(ball) {
     const { scene } = this;
     const dog = scene.dog;
-    if (!dog.carrying && dog.mode === 'normal' && distance(dog.feet, ball) < FETCH.catchDistance) {
+    const reach = FETCH.catchDistance * scene.perks.catchDistance;
+    if (!dog.carrying && dog.mode === 'normal' && distance(dog.feet, ball) < reach) {
       dog.carry(ball);
       this.catches += 1;
       scene.save.stats.ballsCaught += 1;

@@ -87,7 +87,15 @@ export class LostThing {
     const dog = scene.dog;
     const center = { x: this.spot.x * TILE + 8, y: this.spot.y * TILE + 10 };
     const d = distance(dog.feet, center);
-    if (d > SCENT_RANGE) return;
+    const range = SCENT_RANGE * scene.perks.scentRange;
+    if (d > range) return;
+    // With the magnifying glass, the spot twinkles when you're close.
+    this.twinkle = (this.twinkle ?? 0) - dt;
+    if (scene.perks.sparkle && d < 48 && this.twinkle <= 0) {
+      this.twinkle = 0.5;
+      const s = scene.add.image(center.x + (Math.random() - 0.5) * 10, center.y - Math.random() * 6, 'sparkle').setDepth(center.y + 21);
+      scene.tweens.add({ targets: s, scale: 0, angle: 90, duration: 600, onComplete: () => s.destroy() });
+    }
     if (!this.noticed) {
       this.noticed = true;
       scene.hud.bubble(dog, 'Sniff sniff...', 1.4, 18);
@@ -96,7 +104,7 @@ export class LostThing {
     // Puffs come faster the closer the dog gets.
     this.puffTimer -= dt;
     if (this.puffTimer > 0) return;
-    this.puffTimer = 0.25 + (d / SCENT_RANGE) * 1.1;
+    this.puffTimer = 0.25 + (d / range) * 1.1;
     const puff = scene.add
       .image(center.x + (Math.random() - 0.5) * 8, center.y - 2, 'scent')
       .setOrigin(0.5, 1)

@@ -2,8 +2,9 @@
 // `{press dig}` with "press F" or "tap Dig" (keyboard or touch screen).
 
 import { fillControls } from '../input/labels.js';
+import { NAMES } from './characters.js';
 
-export const FARMER_NAME = 'Farmer Hazel';
+export const FARMER_NAME = NAMES.farmer;
 
 export const LINES = {
   firstMorning: [
@@ -21,9 +22,11 @@ export const LINES = {
   pet: [
     '{name} gets a scratch behind the ears.',
     '{name} gets a belly rub. Best day ever!',
-    'Farmer Hazel pats {name} on the head.',
+    `${FARMER_NAME} pats {name} on the head.`,
   ],
   hints: {
+    mail: `There's a package by the mailbox! Bring it to me, {name}.`,
+    shopVisit: `Let's go to the ${NAMES.shop} and pick you something!`,
     sheepOut: "The sheep want to graze! Go into the pen, get behind them, and push them out through the gate.",
     collectEggs: 'There are still eggs by the coop. Bring them to the basket on the porch.',
     buryBone: "Don't forget your bone! Pick it up, then {press dig} on some grass to bury it.",
@@ -100,6 +103,20 @@ export const LINES = {
     wisps: 'If you see any funny little lights by the coop... keep an eye on them.',
   },
   bedtimeNow: 'Time for bed! Head to your dog bed by the doghouse.',
+
+  // Mo the mail carrier
+  moDrop: [`Package for ${NAMES.farmer}!`, 'Special delivery!', "Here's the mail, pup. Don't chew it!"],
+  moSpooked: ['Whoa! Easy there, pup!', 'Yikes! Good doggy... nice doggy...', 'Ha! You got me again!'],
+  beNiceToMo: `Be nice to ${NAMES.mailCarrier}, {name}!`,
+  openGift: 'Ooh, the package! I ordered something special for you, {name}.',
+  openTreats: 'A whole box of treats, just for you, {name}!',
+
+  // Penny and the Wagtail Wagon
+  pennyHello: ['Hello, farm friends!', `The ${NAMES.shop} is open!`, 'Yoo-hoo! Shop on wheels!'],
+  pennyAfterDinner: `Hi, {name}! Come back after dinner with ${NAMES.farmer}.`,
+  pennyThanks: ['Great pick!', 'Ooh, that looks perfect on you!', 'A fine choice!'],
+  pennyEverything: "You've got everything I can sell you right now! Here's a pat on the head, {name}.",
+  shopAfterDinner: `Look who's here! The ${NAMES.shop}! Let's go pick something special for you, {name}.`,
 };
 
 export function fill(text, name) {

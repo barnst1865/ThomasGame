@@ -99,14 +99,20 @@ export class DinnerScene {
     });
   }
 
+  // "It's getting dark..." plus a word about who might come tonight.
+  nightWarning() {
+    const night = this.scene.tonight;
+    return `${LINES.dinnerEnd} ${LINES.dinnerNight[night.threats[0] ?? 'wisps']}`;
+  }
+
   finish() {
     const { scene } = this;
     const name = scene.save.dog.name;
-    const night = scene.tonight;
-    const warning = LINES.dinnerNight[night.threats[0] ?? 'wisps'];
+    // On shop days she says goodnight after the shopping instead.
+    const last = scene.tasks.isActive('shopVisit') ? LINES.shopAfterDinner : this.nightWarning();
     scene.hud.dialogue(
       FARMER_NAME,
-      [{ speaker: null, text: fill(LINES.dinnerEat, name) }, fill(`${LINES.dinnerEnd} ${warning}`, name)],
+      [{ speaker: null, text: fill(LINES.dinnerEat, name) }, fill(last, name)],
       () => {
         scene.hud.letterbox(false);
         scene.cutscene = false;

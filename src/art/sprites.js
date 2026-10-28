@@ -1,7 +1,7 @@
 // Pixel pictures for everything that isn't the dog: farm animals, the
 // farmer, the weasel, items and little icons.
 
-import { flipX } from './pixelArt.js';
+import { flipX, compose } from './pixelArt.js';
 
 // ---------------------------------------------------------------- sheep
 export const SHEEP_COLORS = {
@@ -192,7 +192,7 @@ const FARMER_BACK_BODY = [
   '....obbbbbbo....',
 ];
 
-const FARMER_SIDE_TOP = [
+const FARMER_SIDE_HAT = [
   '................',
   '................',
   '......oooo......',
@@ -200,6 +200,9 @@ const FARMER_SIDE_TOP = [
   '....oHHHHHHo....',
   '....orrrrrro....',
   '..oohhHHHHHhhoo.',
+];
+
+const FARMER_SIDE_BODY = [
   '....oooaaassoo..',
   '.....oaaassso...',
   '.....oaasseso...',
@@ -214,6 +217,8 @@ const FARMER_SIDE_TOP = [
   '......obbbbbo...',
 ];
 
+const FARMER_SIDE_TOP = [...FARMER_SIDE_HAT, ...FARMER_SIDE_BODY];
+
 const FARMER_FACING_LEGS = {
   stand: ['....obboobbo....', '....obboobbo....', '....okkookko....', '...okkkookkko...', '...oooo..oooo...'],
   walk1: ['....obboobbo....', '....okkoobbo....', '...okkkookko....', '...oooo.okkko...', '........oooo....'],
@@ -226,12 +231,124 @@ const FARMER_SIDE_LEGS = {
   walk2: ['......obbbbo....', '......obbbbo....', '......okkkko....', '......okkkkko...', '......oooooo....'],
 };
 
-export const FARMER = {};
-for (const pose of ['stand', 'walk1', 'walk2']) {
-  FARMER[`down-${pose}`] = [...FARMER_HAT, ...FARMER_FRONT_BODY, ...FARMER_FACING_LEGS[pose]];
-  FARMER[`up-${pose}`] = [...FARMER_HAT, ...FARMER_BACK_BODY, ...FARMER_FACING_LEGS[pose]];
-  FARMER[`side-${pose}`] = [...FARMER_SIDE_TOP, ...FARMER_SIDE_LEGS[pose]];
+// Every grown-up shares the farmer's body and walk. They differ in what's
+// on their head (7 rows: front/back and side views, or 8 rows to replace
+// the hair just under the hat too), their colors, and sometimes something
+// extra drawn on top, like a mail bag.
+function person({ head = FARMER_HAT, sideHead = FARMER_SIDE_HAT, backHead = head, extras = {} } = {}) {
+  const join = (top, body) => [...top, ...body.slice(top.length - 7)];
+  const frames = {};
+  for (const pose of ['stand', 'walk1', 'walk2']) {
+    frames[`down-${pose}`] = compose([...join(head, FARMER_FRONT_BODY), ...FARMER_FACING_LEGS[pose]], extras.down);
+    frames[`up-${pose}`] = compose([...join(backHead, FARMER_BACK_BODY), ...FARMER_FACING_LEGS[pose]], extras.up);
+    frames[`side-${pose}`] = compose([...join(sideHead, FARMER_SIDE_BODY), ...FARMER_SIDE_LEGS[pose]], extras.side);
+  }
+  return frames;
 }
+
+export const FARMER = person();
+
+// ---------------------------------------------------------- mail carrier
+// A cap with a badge, and a mail bag on a strap.
+const CAP = ['................', '................', '................', '.....oooooo.....', '....oHHHHHHo....', '....oHHrrHHo....', '...ohhhhhhhho...'];
+const CAP_BACK = ['................', '................', '................', '.....oooooo.....', '....oHHHHHHo....', '....oHHHHHHo....', '....ohhhhhho....'];
+const CAP_SIDE = ['................', '................', '................', '.....oooooo.....', '....oHHHHHHo....', '....oHHHHHrHo...', '....ohhhhhhhhhoo'];
+const blankPerson = () => Array(24).fill('................');
+const at = (rows, y, line) => rows.map((r, i) => (i === y ? line : r));
+let bagFront = blankPerson();
+bagFront = at(bagFront, 12, '...........m....');
+bagFront = at(bagFront, 13, '..........m.....');
+bagFront = at(bagFront, 14, '.........m......');
+bagFront = at(bagFront, 15, '.oooooo.m.......');
+bagFront = at(bagFront, 16, '.oMMMMom........');
+bagFront = at(bagFront, 17, '.ommmmmo........');
+bagFront = at(bagFront, 18, '.ommmmmo........');
+bagFront = at(bagFront, 19, '..ooooo.........');
+let bagSide = blankPerson();
+bagSide = at(bagSide, 15, '...oooo.........');
+bagSide = at(bagSide, 16, '...oMMo.........');
+bagSide = at(bagSide, 17, '...ommo.........');
+bagSide = at(bagSide, 18, '....oo..........');
+let bagBack = blankPerson();
+bagBack = at(bagBack, 12, '....m...........');
+bagBack = at(bagBack, 13, '.....m..........');
+bagBack = at(bagBack, 14, '......m.........');
+bagBack = at(bagBack, 15, '.......m.oooooo.');
+bagBack = at(bagBack, 16, '........moMMMMo.');
+bagBack = at(bagBack, 17, '.........ommmmo.');
+bagBack = at(bagBack, 18, '.........ommmmo.');
+bagBack = at(bagBack, 19, '..........oooo..');
+
+export const MAIL_CARRIER = person({ head: CAP, backHead: CAP_BACK, sideHead: CAP_SIDE, extras: { down: bagFront, side: bagSide, up: bagBack } });
+export const MAIL_CARRIER_COLORS = {
+  ...FARMER_COLORS,
+  H: '#2f4f8f',
+  h: '#24407a',
+  r: '#f2c84b',
+  a: '#3a2a20',
+  s: '#b07a52',
+  S: '#946140',
+  c: '#a9cbea',
+  C: '#86aacb',
+  b: '#2f4f8f',
+  B: '#24407a',
+  u: '#f2c84b',
+  k: '#2e2220',
+  m: '#8a5a35',
+  M: '#b07a4a',
+};
+
+// ------------------------------------------------------------ shopkeeper
+// Red bobbed hair with a headband, and an apron.
+const BOB = [
+  '................',
+  '................',
+  '................',
+  '.....oooooo.....',
+  '....oaaaaaao....',
+  '...oaWWWWWWao...',
+  '...oaaaaaaaao...',
+  '...oaaaaaaaao...',
+];
+const BOB_SIDE = [
+  '................',
+  '................',
+  '................',
+  '.....oooooo.....',
+  '....oaaaaaao....',
+  '...oaWWWWWWWo...',
+  '...oaaaaaaaao...',
+  '...oaaaaaaasoo..',
+];
+let apron = blankPerson();
+apron = at(apron, 13, '....owwwwwwo....');
+apron = at(apron, 14, '....owwwwwwo....');
+apron = at(apron, 15, '....owwwwwwo....');
+apron = at(apron, 16, '....owWWWWwo....');
+apron = at(apron, 17, '....owwwwwwo....');
+apron = at(apron, 18, '....owwwwwwo....');
+let apronSide = blankPerson();
+apronSide = at(apronSide, 13, '.........wwo....');
+apronSide = at(apronSide, 14, '.........wwo....');
+apronSide = at(apronSide, 15, '.........wwo....');
+apronSide = at(apronSide, 16, '.........wwo....');
+apronSide = at(apronSide, 17, '.........wwo....');
+
+export const SHOPKEEPER = person({ head: BOB, backHead: BOB, sideHead: BOB_SIDE, extras: { down: apron, side: apronSide } });
+export const SHOPKEEPER_COLORS = {
+  ...FARMER_COLORS,
+  a: '#c0504d',
+  s: '#f0c8a0',
+  S: '#d9a983',
+  c: '#f2a93b',
+  C: '#d98a2b',
+  b: '#5a9cf0',
+  B: '#4a80cc',
+  u: '#f6ecd2',
+  k: '#5c3a28',
+  w: '#fbf7ee',
+  W: '#e25d6a',
+};
 
 // ---------------------------------------------------------------- weasel
 export const WEASEL_COLORS = {
@@ -519,6 +636,8 @@ export function PREVIEW() {
     list.push([`hen ${pose}`, flipX(rows), CHICKEN_COLORS.brown]);
   }
   for (const [name, rows] of Object.entries(FARMER)) list.push([`farmer ${name}`, rows, FARMER_COLORS]);
+  for (const [name, rows] of Object.entries(MAIL_CARRIER)) list.push([`mail ${name}`, rows, MAIL_CARRIER_COLORS]);
+  for (const [name, rows] of Object.entries(SHOPKEEPER)) list.push([`shop ${name}`, rows, SHOPKEEPER_COLORS]);
   for (const [pose, rows] of Object.entries(WEASEL)) list.push([`weasel ${pose}`, rows, WEASEL_COLORS]);
   for (const [pose, rows] of Object.entries(CROW)) list.push([`crow ${pose}`, rows, CROW_COLORS]);
   for (const [name, item] of Object.entries({ EGG, BONE, TREAT, BALL, BOWL, BOWL_EMPTY, HEART, HEART_EMPTY, HOLE, MOUND, BASKET, DOG_BED, EXCLAIM, QUESTION, ZZZ, SUN, SUNRISE, SUNSET, MOON })) {

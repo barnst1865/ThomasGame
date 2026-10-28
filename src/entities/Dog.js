@@ -19,8 +19,9 @@ export const FACING_VECTORS = {
 };
 
 export class Dog extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene, x, y, breed, coat, collar) {
-    const key = buildDogTexture(scene, breed, coat, collar);
+  // look: what the dog wears ({ collar, neck, hat }, see src/data/shop.js)
+  constructor(scene, x, y, breed, coat, look) {
+    const key = buildDogTexture(scene, breed, coat, look);
     super(scene, x, y, key, 'down-stand-0');
     this.texKey = key;
     this.breed = breed;
@@ -40,6 +41,7 @@ export class Dog extends Phaser.Physics.Arcade.Sprite {
     this.barkCooldown = 0;
     this.pounceCooldown = 0;
     this.pounceHits = new Set();
+    this.perks = null; // presents from the mail make some things better (src/data/gifts.js)
     this.swimming = false;
     this.wet = 0; // seconds of dripping left after a swim
     this.ripple = scene.add.image(x, y, 'ripple').setVisible(false);
@@ -113,7 +115,8 @@ export class Dog extends Phaser.Physics.Arcade.Sprite {
   updateWalking(controls) {
     const move = controls.moveVector();
     const moving = move.x !== 0 || move.y !== 0;
-    let speed = (controls.isDown('run') ? DOG.runSpeed : DOG.walkSpeed) * this.stats.speed;
+    const running = controls.isDown('run');
+    let speed = (running ? DOG.runSpeed * (this.perks?.runSpeed ?? 1) : DOG.walkSpeed) * this.stats.speed;
     if (this.carrying) speed *= 0.85 * this.stats.carrySpeed;
     if (this.swimming) speed *= DOG.swimSpeed;
     this.setVelocity(move.x * speed, move.y * speed);
@@ -159,10 +162,22 @@ export class Dog extends Phaser.Physics.Arcade.Sprite {
     this.scene.time.delayedCall(DOG.stunTime * 1000, () => this.clearTint());
   }
 
+  get digTime() {
+    return DOG.digTime * (this.perks?.digTime ?? 1);
+  }
+
   dig(onDone) {
     if (this.mode !== 'normal') return false;
-    this.setMode('dig', DOG.digTime, onDone);
+    this.setMode('dig', this.digTime, onDone);
     return true;
+  }
+
+  // Swaps to a new sprite sheet (the dog put on something new).
+  setLook(key) {
+    const frame = this.frame.name;
+    this.texKey = key;
+    this.anims.stop();
+    this.setTexture(key, frame);
   }
 
   sleep(x, y) {

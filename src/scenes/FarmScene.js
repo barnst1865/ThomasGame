@@ -19,6 +19,10 @@ import { Butterflies } from '../activities/Butterflies.js';
 import { PondDay } from '../activities/PondDay.js';
 import { HawkAttack } from '../activities/HawkAttack.js';
 import { NightWatch } from '../activities/NightWatch.js';
+import { MailDelivery } from '../activities/Mail.js';
+import { ShopVan } from '../activities/ShopVan.js';
+import { perksFor } from '../data/gifts.js';
+import { buildDogTexture } from '../art/textures.js';
 import { getBreed, getCoat } from '../data/breeds.js';
 import { TASKS } from '../data/tasks.js';
 import { planDay } from '../data/day.js';
@@ -74,6 +78,8 @@ export class FarmScene extends Phaser.Scene {
     this.tonight = this.dayParts.find((p) => p.id === 'night').night;
 
     this.view = buildFarmView(this, this.tiles, this.date.seasonIndex);
+    this.view.toyBox = this.add.image(POINTS.toyBox.x, POINTS.toyBox.y, 'toy-box').setOrigin(0.5, 1).setDepth(POINTS.toyBox.y);
+    this.applyHome();
     this.buildCollision();
     this.physics.world.setBounds(0, 0, MAP_W * TILE, MAP_H * TILE);
     this.penRect = inset(areaPx(AREAS.penInside), 4);
@@ -122,6 +128,8 @@ export class FarmScene extends Phaser.Scene {
     this.runawayHen = new RunawayHen(this);
     this.lostLamb = new LostLamb(this);
     this.night = new NightWatch(this);
+    this.mail = new MailDelivery(this);
+    this.shopVan = new ShopVan(this);
 
     this.scene.launch('Hud', { farm: this });
     this.hud = this.scene.get('Hud');
@@ -163,7 +171,8 @@ export class FarmScene extends Phaser.Scene {
 
   createCharacters() {
     const save = this.save;
-    this.dog = new Dog(this, POINTS.dogWake.x, POINTS.dogWake.y, this.breed, this.coat, save.dog.collar);
+    this.dog = new Dog(this, POINTS.dogWake.x, POINTS.dogWake.y, this.breed, this.coat, this.look());
+    this.refreshPerks();
     this.dog.body.setMass(3);
     this.physics.add.collider(this.dog, this.collisionLayer, null, (dog, tile) => !(tile.index === 3 && this.pond.open));
 
@@ -277,7 +286,7 @@ export class FarmScene extends Phaser.Scene {
     rt.fill(0x141a3a, 1);
     for (const light of [...this.view.lights, ...this.night.lights]) this.eraseLight(light.x, light.y, light.size);
     // A little moonlight around the dog so you can always see where you are.
-    this.eraseLight(this.dog.x, this.dog.y - 6, 128);
+    this.eraseLight(this.dog.x, this.dog.y - 6, 128 * this.perks.light);
   }
 
   // ------------------------------------------------------- day by parts
@@ -321,6 +330,8 @@ export class FarmScene extends Phaser.Scene {
     if (has('chaseCrows')) this.crows.start();
     if (has('hawk')) this.hawk.start();
     if (has('lostLamb')) this.lostLamb.start();
+    if (has('mail')) this.mail.start();
+    if (has('shopVisit')) this.shopVan.start();
     if (part.id === 'dinner') {
       this.crows.shoo();
       this.hawk.stop();
@@ -377,7 +388,7 @@ export class FarmScene extends Phaser.Scene {
     this.farmer.update(dt, dog);
     this.fetch.update(dt);
     this.crows.update(dt);
-    for (const activity of [this.pond, this.lostThing, this.runawayHen, this.butterflies, this.hawk, this.lostLamb, this.night]) {
+    for (const activity of [this.pond, this.lostThing, this.runawayHen, this.butterflies, this.hawk, this.lostLamb, this.night, this.mail, this.shopVan]) {
       activity.update(dt);
     }
 
@@ -410,7 +421,7 @@ export class FarmScene extends Phaser.Scene {
     const ctx = {
       dog: this.dog,
       flock: this.sheep,
-      herdRadius: DOG.herdRadius * this.breed.stats.herdRadius,
+      herdRadius: DOG.herdRadius * this.breed.stats.herdRadius * this.perks.herdRadius,
       bark: this.bark,
       penRect: this.penRect,
       roamRect: this.roamRect,
@@ -484,7 +495,9 @@ export class FarmScene extends Phaser.Scene {
     for (const w of this.night.wisps) if (!w.popped) list.push({ x: w.x, y: w.y, color: 0x8fe36b });
     const hawk = this.hawk.pointer;
     if (hawk) list.push({ x: hawk.x, y: hawk.y, color: 0xe25d6a });
-    for (const stray of [this.runawayHen.pointer, this.lostLamb.pointer]) {
+    const pkg = this.mail.package;
+    const waiting = [this.runawayHen.pointer, this.lostLamb.pointer, this.shopVan.pointer, pkg && !pkg.carried ? pkg : null];
+    for (const stray of waiting) {
       if (stray) list.push({ x: stray.x, y: stray.y - 8, color: 0xf2c84b });
     }
     return list;
@@ -502,7 +515,7 @@ export class FarmScene extends Phaser.Scene {
     const dog = this.dog;
     if (dog.barkCooldown > 0 || dog.mode !== 'normal') return;
     dog.barkCooldown = DOG.barkCooldown;
-    const radius = DOG.barkRadius * this.breed.stats.barkRadius * this.night.barkBoost;
+    const radius = DOG.barkRadius * this.breed.stats.barkRadius * this.night.barkBoost * this.perks.barkRadius;
     this.bark = { x: dog.x, y: dog.y - 3, radius };
     this.barkTimer = 0.15;
     sfx.bark(this.breed.barkPitch ?? 1);
@@ -514,6 +527,7 @@ export class FarmScene extends Phaser.Scene {
     this.night.hearBark(this.bark);
     this.hawk.hearBark(this.bark);
     this.crows.hearBark(this.bark);
+    this.mail.hearBark(this.bark);
     let clucked = false;
     for (const hen of this.chickens) {
       if (hen.visible && distance(dog.feet, hen.feet) < radius * 0.7 && hen.scare(dog.feet) && !clucked) {
@@ -550,6 +564,7 @@ export class FarmScene extends Phaser.Scene {
     if (carried && !BURYABLE.has(carried.kind)) {
       this.hud.bubble(dog, '...', 1, 18);
       if (carried.kind === 'egg') this.hintOnce('egg', 'Eggs go in the basket, not in the ground!');
+      else if (carried.kind === 'package') this.hintOnce('keep-package', `That package is for ${FARMER_NAME}! Bring it to her.`);
       else this.hintOnce(`keep-${carried.kind}`, `${FARMER_NAME} wants that ${carried.label} back! Bring it to her.`);
       return;
     }
@@ -560,7 +575,7 @@ export class FarmScene extends Phaser.Scene {
     }
     dog.dig(() => this.finishDig(tx, ty));
     sfx.dig();
-    this.time.addEvent({ delay: 110, repeat: 5, callback: () => this.spawnDirt(tx * TILE + 8, ty * TILE + 8) });
+    this.time.addEvent({ delay: 110 * this.perks.digTime, repeat: 5, callback: () => this.spawnDirt(tx * TILE + 8, ty * TILE + 8) });
   }
 
   finishDig(tx, ty) {
@@ -629,6 +644,9 @@ export class FarmScene extends Phaser.Scene {
       if (farmerNear && this.fetch.owns(carried)) {
         return { label: this.fetch.giveLabel, action: () => this.fetch.returnBall() };
       }
+      if (farmerNear && this.mail.owns(carried)) {
+        return { label: this.mail.giveLabel, action: () => this.mail.open() };
+      }
       if (farmerNear && this.lostThing.owns(carried)) {
         return { label: this.lostThing.giveLabel, action: () => this.lostThing.giveBack() };
       }
@@ -652,13 +670,55 @@ export class FarmScene extends Phaser.Scene {
     if (best) return { label: `Pick up the ${best.label}`, action: () => this.pickUp(best) };
     const atDinner = this.dinner.ready && (farmerNear || distance(POINTS.bowl, p) < 28);
     if (atDinner) return { label: 'Sit down for dinner', action: () => this.dinner.start() };
-    const special = this.pond.interaction(farmerNear) ?? this.night.interaction(p);
+    const special = this.pond.interaction(farmerNear) ?? this.night.interaction(p) ?? this.shopVan.interaction(p);
     if (special) return special;
     if (farmerNear) return { label: `Talk to ${FARMER_NAME}`, action: () => this.talkToFarmer() };
-    if (distance(POINTS.dogBed, p) < 20) {
+    // The bed and the toy box are side by side: whichever is closer.
+    const toBed = distance(POINTS.dogBed, p);
+    const toBox = distance(POINTS.toyBox, p);
+    if (toBox < 18 && toBox < toBed) return { label: 'Open your toy box', action: () => this.openToyBox() };
+    if (toBed < 20) {
       return { label: this.tasks.isActive('goToBed') ? 'Go to sleep' : 'Lie down in your bed', action: () => this.trySleep() };
     }
     return null;
+  }
+
+  // ------------------------------------------------- looks and presents
+
+  // What the dog is wearing, and its bed and doghouse colors.
+  look() {
+    const { dog, home } = this.save;
+    return { collar: dog.collar, neck: dog.neck, hat: dog.hat, bed: home.bed, house: home.house };
+  }
+
+  // Puts something on (or changes the bed or roof color).
+  wear(slot, look) {
+    if (slot === 'bed' || slot === 'house') {
+      this.save.home[slot] = look;
+      this.applyHome();
+      return;
+    }
+    this.save.dog[slot] = look;
+    const { collar, neck, hat } = this.save.dog;
+    this.dog.setLook(buildDogTexture(this, this.breed, this.coat, { collar, neck, hat }));
+  }
+
+  applyHome() {
+    this.view.dogBed.setTexture(`dog-bed-${this.save.home.bed}`);
+    this.view.doghouse.setTexture(`doghouse-${this.save.home.house}`);
+  }
+
+  openToyBox() {
+    sfx.pickup();
+    this.hud.openToyBox(
+      { owned: this.save.owned, gifts: this.save.gifts, breed: this.breed, coat: this.coat, look: this.look() },
+      (slot, look) => this.wear(slot, look),
+    );
+  }
+
+  refreshPerks() {
+    this.perks = perksFor(this.save.gifts);
+    this.dog.perks = this.perks;
   }
 
   buildPrompts(interaction) {

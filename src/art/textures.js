@@ -3,7 +3,7 @@
 
 import { TILE } from '../config.js';
 import { forEachPixel, spriteSize } from './pixelArt.js';
-import { DOG_FRAMES, DOG_FRAME, dogFrameName, dogPicture, dogColors } from './dogSprites.js';
+import { DOG_FRAMES, DOG_FRAME, dogFrameName, dogPicture, dogColors, lookOf } from './dogSprites.js';
 import {
   SHEEP,
   SHEEP_COLORS,
@@ -11,6 +11,10 @@ import {
   CHICKEN_COLORS,
   FARMER,
   FARMER_COLORS,
+  MAIL_CARRIER,
+  MAIL_CARRIER_COLORS,
+  SHOPKEEPER,
+  SHOPKEEPER_COLORS,
   WEASEL,
   WEASEL_COLORS,
   CROW,
@@ -57,6 +61,10 @@ import {
   RIPPLE,
   SPARKLE,
   SCENT,
+  PACKAGE,
+  TOY_BOX,
+  GIFT_ICONS,
+  BED_COLORS,
 } from './creatures.js';
 import {
   drawGround,
@@ -64,6 +72,9 @@ import {
   drawHouse,
   drawCoop,
   drawDoghouse,
+  drawVanBack,
+  drawVanSide,
+  ROOF_COLORS,
   drawTrough,
   drawScarecrow,
   drawSign,
@@ -110,21 +121,31 @@ function anim(scene, key, texture, frames, frameRate, repeat = -1) {
   scene.anims.create({ key, frames: frames.map((frame) => ({ key: texture, frame })), frameRate, repeat });
 }
 
-export function dogTextureKey(breedId, coatId, collar = 'red') {
-  return `dog:${breedId}:${coatId}:${collar}`;
+// `look` is what the dog wears: { collar, neck, hat } (or just a collar color).
+export function dogTextureKey(breedId, coatId, look = 'red') {
+  const { collar, neck, hat } = lookOf(look);
+  return `dog:${breedId}:${coatId}:${collar}${neck ? `:n-${neck}` : ''}${hat ? `:h-${hat}` : ''}`;
 }
 
-// Builds the sprite sheet and animations for one dog (breed + coat + collar).
-export function buildDogTexture(scene, breed, coat, collar = 'red') {
-  const key = dogTextureKey(breed.id, coat.id, collar);
+// Builds the sprite sheet and animations for one dog (breed + coat + what it wears).
+export function buildDogTexture(scene, breed, coat, look = 'red') {
+  const key = dogTextureKey(breed.id, coat.id, look);
   if (scene.textures.exists(key)) return key;
-  const colors = dogColors(coat, collar);
-  const frames = DOG_FRAMES.map(([dir, pose, tail]) => [dogFrameName(dir, pose, tail), dogPicture(breed, dir, pose, tail), colors]);
+  const colors = dogColors(coat, look);
+  const worn = lookOf(look);
+  const frames = DOG_FRAMES.map(([dir, pose, tail]) => [dogFrameName(dir, pose, tail), dogPicture(breed, dir, pose, tail, worn), colors]);
   sheetTexture(scene, key, frames, DOG_FRAME, DOG_FRAME);
   for (const dir of ['down', 'up', 'side']) {
     anim(scene, `${key}:idle-${dir}`, key, [`${dir}-stand-0`, `${dir}-stand-1`], 3);
     anim(scene, `${key}:walk-${dir}`, key, [`${dir}-walk1-0`, `${dir}-stand-0`, `${dir}-walk2-1`, `${dir}-stand-1`], 10);
   }
+  return key;
+}
+
+// A single picture of the dog facing you, for menus (like the shop).
+export function buildDogPortrait(scene, breed, coat, look = 'red') {
+  const key = `${dogTextureKey(breed.id, coat.id, look)}:portrait`;
+  if (!scene.textures.exists(key)) pixelTexture(scene, key, dogPicture(breed, 'down', 'stand', 0, lookOf(look)), dogColors(coat, look));
   return key;
 }
 
@@ -182,8 +203,12 @@ export function buildBaseTextures(scene) {
     ripple: RIPPLE,
     sparkle: SPARKLE,
     scent: SCENT,
+    package: PACKAGE,
+    'toy-box': TOY_BOX,
   };
   for (const [key, item] of Object.entries(items)) pixelTexture(scene, key, item.rows, item.colors);
+  for (const [id, icon] of Object.entries(GIFT_ICONS)) pixelTexture(scene, `gift-${id}`, icon.rows, icon.colors);
+  for (const [look, colors] of Object.entries(BED_COLORS)) pixelTexture(scene, `dog-bed-${look}`, DOG_BED.rows, colors);
   for (let n = 0; n <= 5; n++) {
     pixelTexture(scene, `basket-${n}`, basketWithEggs(n), { ...BASKET.colors, e: EGG.colors.w, E: EGG.colors.s });
   }
@@ -206,9 +231,13 @@ export function buildBaseTextures(scene) {
     anim(scene, `${key}-peck`, key, ['walk1', 'peck', 'walk1', 'peck'], 4, 0);
   }
 
-  sheetTexture(scene, 'farmer', Object.entries(FARMER).map(([name, rows]) => [name, rows, FARMER_COLORS]), 16, 24);
-  for (const dir of ['down', 'up', 'side']) {
-    anim(scene, `farmer-walk-${dir}`, 'farmer', [`${dir}-walk1`, `${dir}-stand`, `${dir}-walk2`, `${dir}-stand`], 7);
+  // Grown-ups: Farmer Hazel and the visitors. Each walks the same way.
+  const people = { farmer: [FARMER, FARMER_COLORS], 'mail-carrier': [MAIL_CARRIER, MAIL_CARRIER_COLORS], shopkeeper: [SHOPKEEPER, SHOPKEEPER_COLORS] };
+  for (const [key, [frames, colors]] of Object.entries(people)) {
+    sheetTexture(scene, key, Object.entries(frames).map(([name, rows]) => [name, rows, colors]), 16, 24);
+    for (const dir of ['down', 'up', 'side']) {
+      anim(scene, `${key}-walk-${dir}`, key, [`${dir}-walk1`, `${dir}-stand`, `${dir}-walk2`, `${dir}-stand`], 7);
+    }
   }
 
   sheetTexture(scene, 'weasel', Object.entries(WEASEL).map(([pose, rows]) => [pose, rows, WEASEL_COLORS]), 16, 16);
@@ -246,6 +275,9 @@ export function buildBaseTextures(scene) {
   canvasTexture(scene, 'house', 112, 96, (canvas) => drawHouse(canvas));
   canvasTexture(scene, 'coop', 64, 58, (canvas) => drawCoop(canvas));
   canvasTexture(scene, 'doghouse', 32, 42, (canvas) => drawDoghouse(canvas, 'name'));
+  for (const roof of Object.keys(ROOF_COLORS)) canvasTexture(scene, `doghouse-${roof}`, 32, 42, (canvas) => drawDoghouse(canvas, 'name', roof));
+  canvasTexture(scene, 'van-back', 40, 36, (canvas) => drawVanBack(canvas));
+  canvasTexture(scene, 'van-side', 64, 44, (canvas) => drawVanSide(canvas));
   canvasTexture(scene, 'trough', 32, 16, (canvas) => drawTrough(canvas));
   canvasTexture(scene, 'scarecrow', 16, 28, (canvas) => drawScarecrow(canvas));
   canvasTexture(scene, 'sign', 16, 20, (canvas) => drawSign(canvas));

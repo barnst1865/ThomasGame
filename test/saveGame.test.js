@@ -16,7 +16,7 @@ test('a new save starts on day 1 with the chosen dog', () => {
   const save = createNewSave({ name: 'Ranger', breedId: 'cattle-dog', coatId: 'blue' });
   assert.equal(save.day, 1);
   assert.equal(save.treats, 0);
-  assert.deepEqual(save.dog, { name: 'Ranger', breedId: 'cattle-dog', coatId: 'blue', collar: 'red' });
+  assert.deepEqual(save.dog, { name: 'Ranger', breedId: 'cattle-dog', coatId: 'blue', collar: 'red', neck: null, hat: null });
 });
 
 test('saves round-trip through storage', () => {

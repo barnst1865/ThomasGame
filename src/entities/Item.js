@@ -9,6 +9,7 @@ export const ITEM_NAMES = {
   hat: 'hat',
   glove: 'glove',
   key: 'key',
+  package: 'package',
 };
 
 // Only the dog's own things go in the ground.

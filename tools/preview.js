@@ -39,6 +39,11 @@ for (const breed of BREEDS) {
       draw(dogPicture(breed, dir, pose, tail), colors, `${dir} ${pose}${tail}`, row);
     }
     draw(flipX(dogPicture(breed, 'side', 'stand', 0)), colors, 'left', row);
+    // Everything the dog can wear from the shop.
+    for (const [neck, hat] of [['red', 'straw'], ['blue', 'beanie'], ['green', 'party'], ['rainbow', 'crown']]) {
+      const look = { collar: 'gold', neck, hat };
+      for (const dir of ['down', 'side', 'up']) draw(dogPicture(breed, dir, 'stand', 0, look), dogColors(coat, look), `${hat} ${dir}`, row);
+    }
     const label = document.createElement('span');
     label.textContent = `${breed.name} (${coat.name})`;
     row.append(label);

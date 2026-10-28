@@ -8,11 +8,14 @@
 //   icon:   picture shown next to the name at the top of the screen
 //
 // On top of the everyday jobs, most parts pick one "special" activity from
-// SPECIALS below, so days feel different. What happens at night is planned
-// in src/data/nights.js.
+// SPECIALS below, so days feel different. Visitors on a schedule (the mail
+// and the shop on wheels) add their own jobs; see src/data/events.js. What
+// happens at night is planned in src/data/nights.js.
 
 import { createRng } from '../systems/rng.js';
+import { NAMES } from './characters.js';
 import { nightPlan, nightJobs, nightIntro } from './nights.js';
+import { eventsFor } from './events.js';
 
 export const DAY_PARTS = [
   {
@@ -67,11 +70,11 @@ export const DAY_PARTS = [
 export const SPECIALS = {
   morning: [
     { id: 'bone', jobs: ['buryBone'], intro: 'And there is a bone for you to hide!' },
-    { id: 'lostThing', jobs: ['lostThing'], intro: 'Farmer Hazel lost something, too.' },
+    { id: 'lostThing', jobs: ['lostThing'], intro: `${NAMES.farmer} lost something, too.` },
     { id: 'runawayHen', jobs: ['runawayHen'], intro: 'Oh no, a hen got out of the yard!' },
   ],
   break: [
-    { id: 'fetch', jobs: ['fetch'], intro: 'Farmer Hazel wants to play fetch!' },
+    { id: 'fetch', jobs: ['fetch'], intro: `${NAMES.farmer} wants to play fetch!` },
     { id: 'butterflies', jobs: ['butterflies'], intro: 'Butterflies in the garden! Pounce to catch them.' },
     { id: 'pond', jobs: ['pondSticks', 'shakeOff'], intro: 'Pond day! Time for a swim.', farmer: 'pond' },
   ],
@@ -115,21 +118,29 @@ export function specialFor(day, partId) {
   return list[order[step % n]];
 }
 
+// Jobs (and a line for the banner) that visitors add to a part of the day.
+const VISITS = {
+  morning: { event: 'mail', jobs: ['mail'], intro: `${NAMES.mailCarrier} is bringing a package!` },
+  dinner: { event: 'shop', jobs: ['shopVisit'], intro: `The ${NAMES.shop} is coming!` },
+};
+
 // Everything that happens on a given day, part by part.
 export function planDay(day) {
+  const events = eventsFor(day);
   return DAY_PARTS.map((base) => {
     if (base.id === 'night') {
       const night = nightPlan(day);
       return { ...base, jobs: nightJobs(night), intro: nightIntro(night), night };
     }
     const special = SPECIALS[base.id] ? specialFor(day, base.id) : null;
-    if (!special) return { ...base, jobs: [...base.jobs] };
+    const visit = VISITS[base.id] && events[VISITS[base.id].event] ? VISITS[base.id] : null;
     return {
       ...base,
-      jobs: [...base.jobs, ...special.jobs],
-      intro: [base.intro, special.intro].filter(Boolean).join(' '),
-      farmer: special.farmer ?? base.farmer,
-      special: special.id,
+      jobs: [...base.jobs, ...(special?.jobs ?? []), ...(visit?.jobs ?? [])],
+      intro: [base.intro, special?.intro, visit?.intro].filter(Boolean).join(' '),
+      farmer: special?.farmer ?? base.farmer,
+      special: special?.id,
+      events,
     };
   });
 }

@@ -1,16 +1,23 @@
 // Saving and loading. The game auto-saves when the dog goes to sleep.
 // Progress is kept in the browser's localStorage.
 
+import { GIFTS } from '../data/gifts.js';
+import { ALL_ITEMS, STARTER_LOOK } from '../data/shop.js';
+
 export const SAVE_KEY = 'paws-and-pastures/save';
 export const SAVE_VERSION = 1;
 
 export function createNewSave({ name, breedId, coatId }) {
   return {
     version: SAVE_VERSION,
-    dog: { name, breedId, coatId, collar: 'red' },
+    // What the dog is wearing: a collar color, a bandana and a hat (see src/data/shop.js).
+    dog: { name, breedId, coatId, collar: STARTER_LOOK.collar, neck: STARTER_LOOK.neck, hat: STARTER_LOOK.hat },
     day: 1,
-    treats: 0,
+    treats: 0, // every treat ever earned; they unlock shelves at the shop and are never spent
     friendship: { farmer: 0 },
+    gifts: [], // presents from the mail (ids from src/data/gifts.js)
+    owned: [], // things picked at the shop (ids from src/data/shop.js)
+    home: { bed: STARTER_LOOK.bed, house: STARTER_LOOK.house },
     buried: [], // { tx, ty, item } for everything the dog has hidden underground
     stats: {
       bonesBuried: 0,
@@ -56,12 +63,31 @@ function migrate(data) {
     day: toCount(data.day, 1),
     treats: toCount(data.treats, 0),
     friendship: { ...fresh.friendship, ...cleanNumbers(data.friendship) },
+    gifts: knownIds(data.gifts, GIFTS),
+    owned: knownIds(data.owned, ALL_ITEMS),
+    home: { ...fresh.home, ...cleanStrings(data.home) },
     buried: Array.isArray(data.buried)
       ? data.buried.filter((b) => b && Number.isInteger(b.tx) && Number.isInteger(b.ty) && typeof b.item === 'string')
       : [],
     stats: { ...fresh.stats, ...cleanNumbers(data.stats) },
     flags: { ...fresh.flags, ...(data.flags && typeof data.flags === 'object' ? data.flags : {}) },
   };
+}
+
+// Keeps only ids the game knows about, once each.
+function knownIds(list, known) {
+  if (!Array.isArray(list)) return [];
+  const ids = new Set(known.map((k) => k.id));
+  return [...new Set(list.filter((id) => ids.has(id)))];
+}
+
+function cleanStrings(obj) {
+  const out = {};
+  if (!obj || typeof obj !== 'object') return out;
+  for (const [key, value] of Object.entries(obj)) {
+    if (typeof value === 'string') out[key] = value;
+  }
+  return out;
 }
 
 function toCount(value, min) {

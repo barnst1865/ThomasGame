@@ -37,7 +37,7 @@ export class TitleScene extends Phaser.Scene {
 
     const dog = this.save ? this.save.dog : { breedId: 'cattle-dog', coatId: 'blue', collar: 'red' };
     const breed = getBreed(dog.breedId);
-    const key = buildDogTexture(this, breed, getCoat(breed, dog.coatId), dog.collar);
+    const key = buildDogTexture(this, breed, getCoat(breed, dog.coatId), { collar: dog.collar, neck: dog.neck, hat: dog.hat });
     this.add.image(W / 2, 290, 'shadow').setScale(6, 5).setAlpha(0.8);
     this.add.sprite(W / 2, 292, key, 'side-stand-0').setOrigin(0.5, 1).setScale(6).play(`${key}:idle-side`);
 

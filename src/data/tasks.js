@@ -2,6 +2,10 @@
 // is set in src/data/day.js. `reward.friendship` is in friendship points
 // (10 points = 1 heart).
 
+import { NAMES } from './characters.js';
+
+const FARMER = NAMES.farmer;
+
 export const TASKS = {
   sheepOut: {
     title: 'Herd the sheep out to the meadow',
@@ -16,7 +20,7 @@ export const TASKS = {
     reward: { treats: 1, friendship: 1 },
   },
   fetch: {
-    title: 'Play fetch with Farmer Hazel',
+    title: `Play fetch with ${FARMER}`,
     reward: { treats: 2, friendship: 4 },
   },
   herdSheep: {
@@ -52,7 +56,7 @@ export const TASKS = {
     reward: { treats: 6, friendship: 4 },
   },
   lostThing: {
-    title: "Find Farmer Hazel's lost thing",
+    title: `Find ${FARMER}'s lost thing`,
     reward: { treats: 4, friendship: 4 },
   },
   runawayHen: {
@@ -68,7 +72,7 @@ export const TASKS = {
     reward: { treats: 2, friendship: 2 },
   },
   shakeOff: {
-    title: 'Shake off next to Farmer Hazel',
+    title: `Shake off next to ${FARMER}`,
     reward: { treats: 1, friendship: 2 },
   },
   hawk: {
@@ -78,6 +82,14 @@ export const TASKS = {
   lostLamb: {
     title: 'Find the lost lamb and pen it with the sheep',
     reward: { treats: 4, friendship: 4 },
+  },
+  mail: {
+    title: `Bring the package to ${FARMER}`,
+    reward: { treats: 2, friendship: 2 },
+  },
+  shopVisit: {
+    title: `Pick a reward at the ${NAMES.shop}`,
+    reward: { treats: 0, friendship: 3 },
   },
   goToBed: {
     title: 'Go to bed',

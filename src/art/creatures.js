@@ -407,6 +407,189 @@ export const SCENT = {
   colors: { o: '#b89a4a', W: '#fff6d8' },
 };
 
+// A package from the mail, tied with a red ribbon.
+export const PACKAGE = {
+  rows: [
+    '.oooooooooo.',
+    'oBBBBByBBBBo',
+    'obbbbbybbbbo',
+    'obbbbbybbbbo',
+    'oyyyyyyyyyyo',
+    'obbbbbybbbbo',
+    'obbbbbybbbbo',
+    'odddddyddddo',
+    '.oooooooooo.',
+  ],
+  colors: { o: '#4a2f1c', B: '#e0aa70', b: '#c48a4a', d: '#9a6534', y: '#e25d6a' },
+};
+
+// The dog's toy box by the doghouse, with a ball on top.
+export const TOY_BOX = {
+  rows: [
+    '......ooo.......',
+    '.....oRRRo......',
+    '.oooooooooooooo.',
+    'oWWWWWWWWWWWWWWo',
+    'owwwwwwwwwwwwwwo',
+    'oooooooooooooooo',
+    'owwwwwwyywwwwwwo',
+    'owwwwwwyywwwwwwo',
+    'owWwwwwwwwwwwWwo',
+    'owwwwwwwwwwwwwwo',
+    'oddddddddddddddo',
+    '.oooooooooooooo.',
+  ],
+  colors: { o: '#4a2f1c', w: '#c49056', W: '#d9a86c', d: '#8a5a35', y: '#f2c84b', R: '#e25d6a' },
+};
+
+// Little pictures of the mail presents (see src/data/gifts.js).
+export const GIFT_ICONS = {
+  squeakyBall: {
+    rows: [
+      '....oooo....',
+      '..ooRRRRoo..',
+      '.oRRWWRRRRo.',
+      '.oRWWRRRRRo.',
+      'oRRRRRRRRRRo',
+      'oRRRRyyRRRRo',
+      'oRRRRyyRRRRo',
+      'oRRRRRRRRRRo',
+      '.oRRRRRRRro.',
+      '.orRRRRRrro.',
+      '..oorrrroo..',
+      '....oooo....',
+    ],
+    colors: { o: '#3a2a20', R: '#e25d6a', r: '#b5473f', W: '#ffffff', y: '#f2d23a' },
+  },
+  zoomyBooties: {
+    rows: [
+      '............',
+      '....oooo....',
+      '....oBBo....',
+      'yy..oBBo....',
+      '....oBBo....',
+      '.yy.oBBo....',
+      '...oBBBo....',
+      '..oBBBBBoo..',
+      '.oBBBBBBBBo.',
+      '.oBBBBBBBBo.',
+      '.owwwwwwwwo.',
+      '..oooooooo..',
+    ],
+    colors: { o: '#3a2a20', B: '#3f6fd4', w: '#f6ecd2', y: '#f2d23a' },
+  },
+  superSniffer: {
+    rows: [
+      '..........y.',
+      '.........y.y',
+      '..oooooooo..',
+      '.onnnnnnnno.',
+      'onWWnnnnnnno',
+      'onWnnnnnnnno',
+      'onnoonnoonno',
+      '.onnnnnnnno.',
+      '..onnnnnno..',
+      '...oonnoo...',
+      '.....oo.....',
+      '............',
+    ],
+    colors: { o: '#1c1a20', n: '#4a3f48', W: '#ffffff', y: '#f2d23a' },
+  },
+  herdingBell: {
+    rows: [
+      '.....oo.....',
+      '....oyyo....',
+      '....oooo....',
+      '...oyyyyo...',
+      '..oyyWyyyo..',
+      '..oyWyyyyo..',
+      '..oyyyyyyo..',
+      '.oyyyyyyyyo.',
+      'oyyyyyyyyyyo',
+      'oooooooooooo',
+      '.....oo.....',
+      '.....oo.....',
+    ],
+    colors: { o: '#5c3a10', y: '#f2c84b', W: '#fff3b0' },
+  },
+  magnifyingGlass: {
+    rows: [
+      '...oooo.....',
+      '..oLLLLo....',
+      '.oLWLLLLo...',
+      '.oLWLLLLo...',
+      '.oLLLLLLo...',
+      '.oLLLLLLo...',
+      '..oLLLLo....',
+      '...oooohh...',
+      '........hh..',
+      '.........hh.',
+      '..........hh',
+      '............',
+    ],
+    colors: { o: '#4a4a52', L: '#bfe3f2', W: '#ffffff', h: '#8a5a35' },
+  },
+  glowTag: {
+    rows: [
+      '.....yy.....',
+      '.y........y.',
+      '....oooo....',
+      '...oggggo...',
+      '..ogWggggo..',
+      'yogggoogggoy',
+      '..oggggggo..',
+      '...oggggo...',
+      '....oooo....',
+      '.y........y.',
+      '.....yy.....',
+      '............',
+    ],
+    colors: { o: '#5c4a10', g: '#f2e46b', W: '#ffffff', y: '#fff3b0' },
+  },
+  barkBooster: {
+    rows: [
+      '............',
+      '.........oo.',
+      '.......ooRo.',
+      '.....ooRRRo.',
+      '.oooooRRRRo.',
+      '.oWWoRRRRRo.',
+      '.oWWoRRRRRo.',
+      '.oooooRRRRo.',
+      '.....ooRRRo.',
+      '.......ooRo.',
+      '.........oo.',
+      '............',
+    ],
+    colors: { o: '#3a2a20', R: '#e25d6a', W: '#f6ecd2' },
+  },
+  diggingMitts: {
+    rows: [
+      '............',
+      '...oooo.....',
+      '..oGGGGo....',
+      '..oGGGGo.oo.',
+      '..oGGGGooGGo',
+      '..oGGGGGGGo.',
+      '..oGGGGGGo..',
+      '..oGGGGGGo..',
+      '..oGGGGGo...',
+      '..owwwwwo...',
+      '..owwwwwo...',
+      '..ooooooo...',
+    ],
+    colors: { o: '#2a3a20', G: '#5f9e4f', w: '#f6ecd2' },
+  },
+};
+
+// Dog bed colors from the shop (the bed picture is DOG_BED in sprites.js).
+export const BED_COLORS = {
+  red: { o: '#4a2320', R: '#b5473f', r: '#d9645a', c: '#efe2c4' },
+  blue: { o: '#1f2a4a', R: '#3f66a8', r: '#5a86e0', c: '#efe2c4' },
+  green: { o: '#1f3a24', R: '#3f8a4f', r: '#5fae5f', c: '#efe2c4' },
+  royal: { o: '#2a1a4a', R: '#6a3fa8', r: '#8a5ad4', c: '#f2c84b' },
+};
+
 // Everything above, for the sprite preview tool.
 export function PREVIEW_CREATURES() {
   const list = [];
@@ -416,6 +599,6 @@ export function PREVIEW_CREATURES() {
   }
   BUTTERFLY_COLORS.forEach(([a, A]) => list.push(['butterfly', BUTTERFLY.open, { a, A, o: '#2b2024', b: '#4a3326' }]));
   for (const [kind, colors] of Object.entries(WISP_COLORS)) list.push([`wisp ${kind}`, WISP.a, colors]);
-  for (const [name, item] of Object.entries({ STICK, HAT, GLOVE, KEY, RIPPLE, SPARKLE, SCENT })) list.push([name.toLowerCase(), item.rows, item.colors]);
+  for (const [name, item] of Object.entries({ STICK, HAT, GLOVE, KEY, RIPPLE, SPARKLE, SCENT, PACKAGE, TOY_BOX, ...GIFT_ICONS })) list.push([name.toLowerCase(), item.rows, item.colors]);
   return list;
 }

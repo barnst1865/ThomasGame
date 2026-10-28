@@ -396,7 +396,15 @@ export function drawCoop(canvas) {
   outlineCanvas(canvas);
 }
 
-export function drawDoghouse(canvas, name = '') {
+// Roof colors you can pick at the shop: [stripe, stripe, eave].
+export const ROOF_COLORS = {
+  red: ['#c4544a', '#b54a41', '#8f3a33'],
+  blue: ['#4f78c0', '#3f66a8', '#2f4f8f'],
+  yellow: ['#e2b33c', '#cf9f2a', '#a87f1f'],
+};
+
+export function drawDoghouse(canvas, name = '', roof = 'red') {
+  const [roofA, roofB, eave] = ROOF_COLORS[roof] ?? ROOF_COLORS.red;
   const ctx = canvas.getContext('2d');
   box(ctx, 3, 16, 26, 24, '#c49056');
   for (let y = 19; y < 40; y += 4) box(ctx, 3, y, 26, 1, '#a8774a');
@@ -406,10 +414,68 @@ export function drawDoghouse(canvas, name = '') {
   // Roof.
   for (let y = 2; y < 20; y++) {
     const inset = Math.max(0, Math.floor((14 - y) * 1.1));
-    box(ctx, inset, y, 32 - inset * 2, 1, y % 4 < 2 ? '#c4544a' : '#b54a41');
+    box(ctx, inset, y, 32 - inset * 2, 1, y % 4 < 2 ? roofA : roofB);
   }
-  box(ctx, 0, 18, 32, 2, '#8f3a33');
+  box(ctx, 0, 18, 32, 2, eave);
   if (name) box(ctx, 9, 21, 14, 4, '#f1e4c6');
+  outlineCanvas(canvas);
+}
+
+// The Wagtail Wagon, a shop on wheels. Seen from behind while it drives up
+// the road, and from the side once it's parked.
+const VAN = { body: '#5aa9a0', dark: '#3f8a82', stripe: '#f6ecd2', awningA: '#e25d6a', awningB: '#fbf7ee', tire: '#2b2024', hub: '#9a9aa4' };
+
+function pawPrint(ctx, x, y, color) {
+  disc(ctx, x, y + 3, 3, color);
+  for (const [dx, dy] of [[-3, -1], [-1, -3], [1, -3], [3, -1]]) pixel(ctx, x + dx, y + dy, color);
+}
+
+export function drawVanBack(canvas) {
+  const ctx = canvas.getContext('2d');
+  box(ctx, 6, 29, 6, 6, VAN.tire);
+  box(ctx, 28, 29, 6, 6, VAN.tire);
+  box(ctx, 3, 3, 34, 27, VAN.body);
+  box(ctx, 3, 3, 34, 3, VAN.dark);
+  for (let x = 3; x < 37; x += 4) box(ctx, x, 6, 2, 3, VAN.awningA);
+  for (let x = 5; x < 37; x += 4) box(ctx, x, 6, 2, 3, VAN.awningB);
+  box(ctx, 19, 10, 1, 17, VAN.dark);
+  box(ctx, 3, 18, 34, 2, VAN.stripe);
+  pawPrint(ctx, 12, 11, VAN.stripe);
+  pawPrint(ctx, 27, 11, VAN.stripe);
+  box(ctx, 4, 22, 3, 4, '#e25d6a');
+  box(ctx, 33, 22, 3, 4, '#e25d6a');
+  box(ctx, 1, 27, 38, 3, VAN.hub);
+  outlineCanvas(canvas);
+}
+
+export function drawVanSide(canvas) {
+  const ctx = canvas.getContext('2d');
+  // Cargo box (the shop) on the left, the cab on the right.
+  box(ctx, 2, 6, 44, 30, VAN.body);
+  box(ctx, 46, 14, 16, 22, VAN.body);
+  box(ctx, 49, 16, 11, 8, '#bfe3f2');
+  box(ctx, 50, 17, 3, 2, '#ffffff');
+  box(ctx, 46, 26, 16, 1, VAN.dark);
+  box(ctx, 2, 6, 44, 2, VAN.dark);
+  // The shop window, full of goodies, under a striped awning.
+  box(ctx, 6, 13, 36, 13, '#3a3036');
+  for (const [x, color] of [[9, '#3f6fd4'], [15, '#f2c84b'], [21, '#e25d6a'], [27, '#3f9c55'], [33, '#8a5ad4']]) {
+    box(ctx, x, 20, 4, 5, color);
+    box(ctx, x + 1, 17, 2, 3, color);
+  }
+  for (let x = 4; x < 44; x += 4) {
+    box(ctx, x, 9, 2, 4, VAN.awningA);
+    box(ctx, x + 2, 9, 2, 4, VAN.awningB);
+    pixel(ctx, x, 13, VAN.awningA);
+    pixel(ctx, x + 2, 13, VAN.awningB);
+  }
+  box(ctx, 2, 28, 44, 3, VAN.stripe);
+  pawPrint(ctx, 54, 30, VAN.stripe);
+  box(ctx, 0, 34, 64, 3, VAN.hub);
+  for (const cx of [13, 52]) {
+    disc(ctx, cx, 37, 5, VAN.tire);
+    disc(ctx, cx, 37, 2, VAN.hub);
+  }
   outlineCanvas(canvas);
 }
 
