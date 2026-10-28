@@ -23,6 +23,8 @@ import { MailDelivery } from '../activities/Mail.js';
 import { ShopVan } from '../activities/ShopVan.js';
 import { Pickles } from '../activities/Pickles.js';
 import { Mischief } from '../activities/Mischief.js';
+import { Rival } from '../activities/Rival.js';
+import { ensureStory } from '../data/story.js';
 import { NAMES } from '../data/characters.js';
 import { perksFor } from '../data/gifts.js';
 import { buildDogTexture } from '../art/textures.js';
@@ -77,12 +79,14 @@ export class FarmScene extends Phaser.Scene {
     this.bark = null;
     this.barkTimer = 0;
     // What today holds: the parts of the day and who visits tonight.
-    this.dayParts = planDay(save.day);
+    ensureStory(save);
+    this.dayParts = planDay(save.day, save.story);
     this.tonight = this.dayParts.find((p) => p.id === 'night').night;
 
     this.view = buildFarmView(this, this.tiles, this.date.seasonIndex);
     this.view.toyBox = this.add.image(POINTS.toyBox.x, POINTS.toyBox.y, 'toy-box').setOrigin(0.5, 1).setDepth(POINTS.toyBox.y);
     this.applyHome();
+    this.showTrophy();
     this.buildCollision();
     this.physics.world.setBounds(0, 0, MAP_W * TILE, MAP_H * TILE);
     this.penRect = inset(areaPx(AREAS.penInside), 4);
@@ -136,6 +140,7 @@ export class FarmScene extends Phaser.Scene {
     this.pickles = new Pickles(this);
     const lostToday = this.dayParts.some((p) => p.jobs.includes('lostThing')) ? this.lostThing.kind : null;
     this.mischief = new Mischief(this, lostToday);
+    this.rival = new Rival(this);
 
     this.scene.launch('Hud', { farm: this });
     this.hud = this.scene.get('Hud');
@@ -346,8 +351,10 @@ export class FarmScene extends Phaser.Scene {
     if (has('hawk')) this.hawk.start();
     if (has('lostLamb')) this.lostLamb.start();
     if (has('mail')) this.mail.start();
+    if (has('letter')) this.mail.start({ letter: true });
     if (has('shopVisit')) this.shopVan.start();
     if (has('findBowl')) this.pickles.startChase();
+    this.rival.startPart(part);
     if (part.id === 'dinner') {
       this.crows.shoo();
       this.hawk.stop();
@@ -418,6 +425,7 @@ export class FarmScene extends Phaser.Scene {
       this.shopVan,
       this.pickles,
       this.mischief,
+      this.rival,
     ]) {
       activity.update(dt);
     }
@@ -448,8 +456,10 @@ export class FarmScene extends Phaser.Scene {
 
   updateSheep(dt) {
     const part = this.plan.part?.id;
+    const herders = this.rival.herders;
     const ctx = {
       dog: this.dog,
+      herders: herders.length ? herders : [this.dog],
       flock: this.sheep,
       herdRadius: DOG.herdRadius * this.breed.stats.herdRadius * this.perks.herdRadius,
       bark: this.bark,
@@ -527,7 +537,14 @@ export class FarmScene extends Phaser.Scene {
     const hawk = this.hawk.pointer;
     if (hawk) list.push({ x: hawk.x, y: hawk.y, color: 0xe25d6a });
     const pkg = this.mail.package;
-    const waiting = [this.runawayHen.pointer, this.lostLamb.pointer, this.shopVan.pointer, this.pickles.pointer, pkg && !pkg.carried ? pkg : null];
+    const waiting = [
+      this.runawayHen.pointer,
+      this.lostLamb.pointer,
+      this.shopVan.pointer,
+      this.pickles.pointer,
+      this.rival.pointer,
+      pkg && !pkg.carried ? pkg : null,
+    ];
     for (const stray of waiting) {
       if (stray) list.push({ x: stray.x, y: stray.y - 8, color: 0xf2c84b });
     }
@@ -560,6 +577,7 @@ export class FarmScene extends Phaser.Scene {
     this.crows.hearBark(this.bark);
     this.mail.hearBark(this.bark);
     this.pickles.hearBark(this.bark);
+    this.rival.hearBark(this.bark);
     let clucked = false;
     for (const hen of this.chickens) {
       if (hen.visible && distance(dog.feet, hen.feet) < radius * 0.7 && hen.scare(dog.feet) && !clucked) {
@@ -597,13 +615,20 @@ export class FarmScene extends Phaser.Scene {
       this.hud.bubble(dog, '...', 1, 18);
       if (carried.kind === 'egg') this.hintOnce('egg', 'Eggs go in the basket, not in the ground!');
       else if (carried.kind === 'package') this.hintOnce('keep-package', `That package is for ${FARMER_NAME}! Bring it to her.`);
+      else if (carried.kind === 'letter') this.hintOnce('keep-letter', `That letter is for ${FARMER_NAME}! Bring it to her.`);
       else if (carried.kind === 'dinner-bowl') this.hintOnce('keep-bowl', 'Put your bowl back on the porch, by the door!');
       else if (carried.kind === 'sheet') this.hintOnce('keep-sheet', 'That sheet is going in the mud puddle, not the ground!');
       else if (carried.kind === 'farmer-hat') this.hintOnce('keep-hat', `Bring the hat to ${NAMES.rooster}!`);
+      else if (carried.kind === 'egg-painted') this.hintOnce('keep-painted', 'Bring the painted egg to the contest basket!');
+      else if (carried.kind === 'ball') this.hintOnce('keep-ball', `Bring the ball back to ${FARMER_NAME}!`);
       else this.hintOnce(`keep-${carried.kind}`, `${FARMER_NAME} wants that ${carried.label} back! Bring it to her.`);
       return;
     }
-    const buried = this.save.buried.some((b) => b.tx === tx && b.ty === ty) || this.lostThing.digFinds(tx, ty) || this.pickles.digFinds(tx, ty);
+    const buried =
+      this.save.buried.some((b) => b.tx === tx && b.ty === ty) ||
+      this.lostThing.digFinds(tx, ty) ||
+      this.pickles.digFinds(tx, ty) ||
+      this.rival.digFinds(tx, ty);
     if (this.holes.has(key) && !buried && !dog.carrying) {
       this.hintOnce('dug', 'There is already a hole here. Nothing inside!');
       return;
@@ -622,6 +647,10 @@ export class FarmScene extends Phaser.Scene {
     }
     if (!dog.carrying && this.pickles.digFinds(tx, ty)) {
       this.pickles.found(tx, ty);
+      return;
+    }
+    if (this.rival.digFinds(tx, ty)) {
+      this.rival.found(tx, ty);
       return;
     }
     const found = this.save.buried.findIndex((b) => b.tx === tx && b.ty === ty);
@@ -680,6 +709,8 @@ export class FarmScene extends Phaser.Scene {
     const farmerNear = this.farmer.available && distance(this.farmer.feet, p) < 26;
     const carried = dog.carrying;
     if (carried) {
+      const contest = this.rival.interaction(p, carried);
+      if (contest) return contest;
       if (farmerNear && this.fetch.owns(carried)) {
         return { label: this.fetch.giveLabel, action: () => this.fetch.returnBall() };
       }
@@ -712,6 +743,7 @@ export class FarmScene extends Phaser.Scene {
     const atDinner = this.dinner.ready && (farmerNear || distance(POINTS.bowl, p) < 28);
     if (atDinner) return { label: 'Sit down for dinner', action: () => this.dinner.start() };
     const special =
+      this.rival.interaction(p, null) ??
       this.pond.interaction(farmerNear) ??
       this.night.interaction(p) ??
       this.shopVan.interaction(p) ??
@@ -747,6 +779,15 @@ export class FarmScene extends Phaser.Scene {
     this.save.dog[slot] = look;
     const { collar, neck, hat } = this.save.dog;
     this.dog.setLook(buildDogTexture(this, this.breed, this.coat, { collar, neck, hat }));
+  }
+
+  // The Golden Bone trophy (or Duke's friendship ribbon) by the doghouse.
+  showTrophy() {
+    const prize = this.save.story?.trophy;
+    if (!prize) return;
+    const key = prize === 'gold' ? 'trophy' : 'ribbon';
+    if (this.view.trophy) this.view.trophy.setTexture(key);
+    else this.view.trophy = this.add.image(288, 128, key).setOrigin(0.5, 1).setDepth(128);
   }
 
   applyHome() {

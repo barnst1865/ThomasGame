@@ -14,7 +14,7 @@ import { sfx } from '../systems/sfx.js';
 
 const NAP_SPOTS = [
   { x: 118, y: 143 }, // the west end of the porch
-  { x: 282, y: 127 }, // beside the doghouse
+  { x: 300, y: 150 }, // near the doghouse
   { x: 250, y: 214 }, // in the shade of the tree by the yard
   { x: 586, y: 236 }, // by the coop
 ];

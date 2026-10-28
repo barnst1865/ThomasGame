@@ -13,6 +13,23 @@ const SCENT_RANGE = 130;
 
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
+// A wavy line of scent rising from something buried at `center`.
+export function scentPuff(scene, center) {
+  const puff = scene.add
+    .image(center.x + (Math.random() - 0.5) * 8, center.y - 2, 'scent')
+    .setOrigin(0.5, 1)
+    .setAlpha(0)
+    .setDepth(center.y + 20);
+  scene.tweens.add({ targets: puff, y: center.y - 16 - Math.random() * 6, duration: 1300, ease: 'Sine.Out', onComplete: () => puff.destroy() });
+  scene.tweens.add({ targets: puff, alpha: 0.95, duration: 300, yoyo: true, hold: 500 });
+}
+
+// A quick twinkle (with the magnifying glass, hidden things sparkle).
+export function twinkle(scene, center) {
+  const s = scene.add.image(center.x + (Math.random() - 0.5) * 10, center.y - Math.random() * 6, 'sparkle').setDepth(center.y + 21);
+  scene.tweens.add({ targets: s, scale: 0, angle: 90, duration: 600, onComplete: () => s.destroy() });
+}
+
 // Which thing goes missing on a given day (the same every time you play it).
 export function lostThingFor(day) {
   return LOST_THINGS[createRng(day * 31 + 5).int(0, LOST_THINGS.length - 1)];
@@ -93,8 +110,7 @@ export class LostThing {
     this.twinkle = (this.twinkle ?? 0) - dt;
     if (scene.perks.sparkle && d < 48 && this.twinkle <= 0) {
       this.twinkle = 0.5;
-      const s = scene.add.image(center.x + (Math.random() - 0.5) * 10, center.y - Math.random() * 6, 'sparkle').setDepth(center.y + 21);
-      scene.tweens.add({ targets: s, scale: 0, angle: 90, duration: 600, onComplete: () => s.destroy() });
+      twinkle(scene, center);
     }
     if (!this.noticed) {
       this.noticed = true;
@@ -105,18 +121,6 @@ export class LostThing {
     this.puffTimer -= dt;
     if (this.puffTimer > 0) return;
     this.puffTimer = 0.25 + (d / range) * 1.1;
-    const puff = scene.add
-      .image(center.x + (Math.random() - 0.5) * 8, center.y - 2, 'scent')
-      .setOrigin(0.5, 1)
-      .setAlpha(0)
-      .setDepth(center.y + 20);
-    scene.tweens.add({
-      targets: puff,
-      y: center.y - 16 - Math.random() * 6,
-      duration: 1300,
-      ease: 'Sine.Out',
-      onComplete: () => puff.destroy(),
-    });
-    scene.tweens.add({ targets: puff, alpha: 0.95, duration: 300, yoyo: true, hold: 500 });
+    scentPuff(scene, center);
   }
 }

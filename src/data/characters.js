@@ -12,6 +12,7 @@ export const NAMES = {
   rival: 'Duke',
   neighbor: 'Gus',
   richGuy: 'Mr. Goldsby',
+  driver: 'Bruno',
   company: 'Goldsby MegaFarms',
   inspector: 'Ms. Fern',
 };

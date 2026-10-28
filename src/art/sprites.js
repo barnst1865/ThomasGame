@@ -303,6 +303,116 @@ export const MAIL_CARRIER_COLORS = {
   M: '#b07a4a',
 };
 
+// --------------------------------------------------------------- neighbor
+// Gus from next door: a green cap and a big sandy beard.
+let beardFront = blankPerson();
+beardFront = at(beardFront, 10, '....oaaaaaao....');
+beardFront = at(beardFront, 11, '.....oaaaao.....');
+beardFront = at(beardFront, 12, '......oaao......');
+let beardSide = blankPerson();
+beardSide = at(beardSide, 10, '........aaaao...');
+beardSide = at(beardSide, 11, '.........aaao...');
+export const NEIGHBOR = person({ head: CAP, backHead: CAP_BACK, sideHead: CAP_SIDE, extras: { down: beardFront, side: beardSide } });
+export const NEIGHBOR_COLORS = {
+  ...FARMER_COLORS,
+  H: '#3f8a4f',
+  h: '#2f6a3c',
+  r: '#f2c84b',
+  a: '#b88a54',
+  c: '#d9c49a',
+  C: '#bfa77a',
+  b: '#6a8a3a',
+  B: '#54702c',
+  u: '#f2c84b',
+};
+
+// ----------------------------------------------------------- truck driver
+// The driver of the weird black truck: a black cap, dark glasses and a
+// black jacket.
+let shadesFront = blankPerson();
+shadesFront = at(shadesFront, 9, '.....gggggg.....');
+let shadesSide = blankPerson();
+shadesSide = at(shadesSide, 9, '.........ggg....');
+export const DRIVER = person({ head: CAP, backHead: CAP_BACK, sideHead: CAP_SIDE, extras: { down: shadesFront, side: shadesSide } });
+export const DRIVER_COLORS = {
+  ...FARMER_COLORS,
+  H: '#2a2a33',
+  h: '#1c1c22',
+  r: '#9a9aa4',
+  a: '#3a2a20',
+  s: '#d9a983',
+  S: '#b8896a',
+  c: '#3a3a44',
+  C: '#2a2a33',
+  b: '#4a4a5a',
+  B: '#3a3a48',
+  u: '#9a9aa4',
+  k: '#1c1c22',
+  g: '#111118',
+};
+
+// ------------------------------------------------------------ Mr. Goldsby
+// A rich man in a tall black hat, a purple suit and a gold tie, with a big
+// white mustache.
+const TOP_HAT = ['.....oooooo.....', '.....oHHHHo.....', '.....oHHHHo.....', '.....oHHHHo.....', '.....orrrro.....', '.....oHHHHo.....', '...oohhhhhhoo...'];
+const TOP_HAT_SIDE = ['.....oooooo.....', '.....oHHHHo.....', '.....oHHHHo.....', '.....oHHHHo.....', '.....orrrro.....', '.....oHHHHo.....', '....oohhhhhhooo.'];
+let suitFront = blankPerson();
+suitFront = at(suitFront, 10, '.....mmmmmm.....');
+suitFront = at(suitFront, 12, '.......tt.......');
+suitFront = at(suitFront, 13, '.......tt.......');
+suitFront = at(suitFront, 14, '.......tt.......');
+let suitSide = blankPerson();
+suitSide = at(suitSide, 10, '...........mm...');
+export const TYCOON = person({ head: TOP_HAT, backHead: TOP_HAT, sideHead: TOP_HAT_SIDE, extras: { down: suitFront, side: suitSide } });
+export const TYCOON_COLORS = {
+  ...FARMER_COLORS,
+  H: '#2a2230',
+  h: '#1c1620',
+  r: '#f2c84b',
+  a: '#c8c8d0',
+  c: '#6a3f98',
+  C: '#54307a',
+  b: '#3f2a5a',
+  B: '#2f1f45',
+  u: '#f2c84b',
+  k: '#1c1620',
+  m: '#f6f2e8',
+  t: '#f2c84b',
+};
+
+// ------------------------------------------------------------- Ms. Fern
+// The nature inspector: a ranger's hat, a green shirt and a clipboard.
+const RANGER_HAT = ['................', '................', '.......oo.......', '......oHHo......', '.....oHHHHo.....', '....orrrrrro....', '.oohhHHHHHHhhoo.'];
+const RANGER_HAT_SIDE = ['................', '................', '.......oo.......', '......oHHo......', '.....oHHHHo.....', '....orrrrrro....', '..oohhHHHHHhhoo.'];
+let clipboardFront = blankPerson();
+clipboardFront = at(clipboardFront, 15, '...........oooo.');
+clipboardFront = at(clipboardFront, 16, '...........owWo.');
+clipboardFront = at(clipboardFront, 17, '...........oWwo.');
+clipboardFront = at(clipboardFront, 18, '...........oooo.');
+let clipboardSide = blankPerson();
+clipboardSide = at(clipboardSide, 15, '............ooo.');
+clipboardSide = at(clipboardSide, 16, '............owo.');
+clipboardSide = at(clipboardSide, 17, '............oWo.');
+clipboardSide = at(clipboardSide, 18, '............ooo.');
+export const INSPECTOR = person({ head: RANGER_HAT, backHead: RANGER_HAT, sideHead: RANGER_HAT_SIDE, extras: { down: clipboardFront, side: clipboardSide } });
+export const INSPECTOR_COLORS = {
+  ...FARMER_COLORS,
+  H: '#c9a36a',
+  h: '#a8844e',
+  r: '#3f8a4f',
+  a: '#8a4a2a',
+  s: '#c98f62',
+  S: '#a8744e',
+  c: '#6f9a4f',
+  C: '#557a3a',
+  b: '#b89a6a',
+  B: '#9a7f52',
+  u: '#557a3a',
+  k: '#5c3a28',
+  w: '#fbf7ee',
+  W: '#b8b8c0',
+};
+
 // ------------------------------------------------------------ shopkeeper
 // Red bobbed hair with a headband, and an apron.
 const BOB = [
@@ -644,6 +754,7 @@ export function PREVIEW() {
   for (const [name, rows] of Object.entries(FARMER_NOHAT)) list.push([`no hat ${name}`, rows, FARMER_COLORS]);
   for (const [name, rows] of Object.entries(MAIL_CARRIER)) list.push([`mail ${name}`, rows, MAIL_CARRIER_COLORS]);
   for (const [name, rows] of Object.entries(SHOPKEEPER)) list.push([`shop ${name}`, rows, SHOPKEEPER_COLORS]);
+  for (const [name, rows] of Object.entries(NEIGHBOR)) list.push([`gus ${name}`, rows, NEIGHBOR_COLORS]);
   for (const [pose, rows] of Object.entries(WEASEL)) list.push([`weasel ${pose}`, rows, WEASEL_COLORS]);
   for (const [pose, rows] of Object.entries(CROW)) list.push([`crow ${pose}`, rows, CROW_COLORS]);
   for (const [name, item] of Object.entries({ EGG, BONE, TREAT, BALL, BOWL, BOWL_EMPTY, HEART, HEART_EMPTY, HOLE, MOUND, BASKET, DOG_BED, EXCLAIM, QUESTION, ZZZ, SUN, SUNRISE, SUNSET, MOON })) {

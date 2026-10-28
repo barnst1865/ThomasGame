@@ -123,17 +123,23 @@ missed but nobody is hurt.
    or underground; Sir Cluckington the rooster hands out optional mischief
    (washing line, Farmer Hazel's hat, muddy paw prints) worth feathers,
    and three feathers make a Feather Cap.
-3. Duke, the show dog from next door, arrives on day 3. Four contests on
-   days 5, 8, 11 and 14 (fetch race, egg hunt, treasure dig-off, herding
-   trial). Duke becomes a friend win or lose.
+3. Duke (built), the show dog from next door, arrives on day 3 with Gus,
+   his owner. Four contests on days 5, 8, 11 and 14 (fetch race, painted
+   egg hunt, treasure dig-off, herding trial) take over that part of the
+   day. Duke plays fair but stops to show off, so a quick player can beat
+   him. Each win is 5 treats. The series decides the Golden Bone trophy
+   (shared on a tie; a ribbon if Duke wins), which stays by the doghouse.
+   Duke becomes a friend win or lose. Old saves start the story on the
+   day they're next played (`ensureStory` in `src/data/story.js`).
 4. The Goldsby plan (days 15 to 28): a letter, a weird truck to
    investigate, Mr. Goldsby's plans for the farm, missions to stop him,
    and a finale where all your friends help.
 
 ## Status
 
-**Version 0.4 is built.** Mail, presents, the shop on wheels and the toy
-box work. The task-driven day above works from start to finish, with nine special activities taking turns, four kinds of prowler,
+**Version 0.5 is built.** Mail, presents, the shop on wheels and the toy
+box work, Pickles and Sir Cluckington liven up the farm, and Duke's
+contests run in the first two weeks. The task-driven day above works from start to finish, with nine special activities taking turns, four kinds of prowler,
 and the will-o'-wisps from night 4 on. The game pauses
 with a "Click to keep playing" button when it loses keyboard focus, and any
 key or a click wakes the dog up in the morning. Seasons change the farm's
@@ -148,7 +154,7 @@ buttons. The site asks search engines and AI crawlers to stay away
 - More fun-break activities to choose from: free time to explore.
 - New areas: the woods trail on the east edge and the town at the end of
   the road.
-- More animals: cows, pigs and the farm cat.
+- More animals: cows and pigs.
 - More mystical beings, like a forest spirit that protects the farm.
 - Friendship with the golden wisp that grows over many nights.
 - Tug and nip moves to go with pounce.

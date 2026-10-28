@@ -19,6 +19,7 @@ export function createNewSave({ name, breedId, coatId }) {
     owned: [], // things picked at the shop (ids from src/data/shop.js)
     home: { bed: STARTER_LOOK.bed, house: STARTER_LOOK.house },
     feathers: 0, // from Sir Cluckington's mischief
+    story: {}, // when the story chapters start and how they went (see src/data/story.js)
     buried: [], // { tx, ty, item } for everything the dog has hidden underground
     stats: {
       bonesBuried: 0,
@@ -68,12 +69,24 @@ function migrate(data) {
     owned: knownIds(data.owned, ALL_ITEMS),
     home: { ...fresh.home, ...cleanStrings(data.home) },
     feathers: toCount(data.feathers, 0),
+    story: cleanStory(data.story),
     buried: Array.isArray(data.buried)
       ? data.buried.filter((b) => b && Number.isInteger(b.tx) && Number.isInteger(b.ty) && typeof b.item === 'string')
       : [],
     stats: { ...fresh.stats, ...cleanNumbers(data.stats) },
     flags: { ...fresh.flags, ...(data.flags && typeof data.flags === 'object' ? data.flags : {}) },
   };
+}
+
+// The story record: start days, contest results and a few flags.
+function cleanStory(story) {
+  if (!story || typeof story !== 'object') return {};
+  const out = {};
+  for (const [key, value] of Object.entries(story)) {
+    if (Number.isInteger(value) || typeof value === 'string' || typeof value === 'boolean') out[key] = value;
+  }
+  if (Array.isArray(story.contests)) out.contests = story.contests.slice(0, 4).map((r) => (r === 'won' || r === 'lost' ? r : null));
+  return out;
 }
 
 // Keeps only ids the game knows about, once each.

@@ -3,6 +3,7 @@
 
 import { POINTS } from '../world/farmMap.js';
 import { FARMER_NAME, LINES, fill } from '../data/dialogue.js';
+import { CONTESTS, contestOn } from '../data/story.js';
 import { sfx } from '../systems/sfx.js';
 
 export class DinnerScene {
@@ -66,6 +67,11 @@ export class DinnerScene {
     if (done('butterflies')) lines.push(LINES.dinnerButterflies);
     if (done('pondSticks')) lines.push(LINES.dinnerPond);
     if (done('findBowl')) lines.push(LINES.dinnerBowl);
+    if (done('meetDuke')) lines.push(LINES.dinnerMetDuke);
+    const contest = contestOn(scene.save.day, scene.save.story);
+    const result = contest >= 0 ? scene.save.story.contests[contest] : null;
+    if (result) lines.push((result === 'won' ? LINES.dinnerContestWon : LINES.dinnerContestLost).replace('{contest}', CONTESTS[contest].name));
+    if (contest === 3 && result) lines.push(scene.save.story.trophy === 'gold' ? LINES.dinnerTrophy : LINES.dinnerRibbon);
     lines.push(...scene.mischief.dinnerLines());
     // Before the first wisps come, she has noticed something odd.
     if (scene.tonight.wisps > 0 && !scene.save.flags.sawLights) {

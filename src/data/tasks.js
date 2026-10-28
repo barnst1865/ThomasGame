@@ -108,6 +108,76 @@ export const TASKS = {
     title: `Mischief: muddy paw prints on the porch`,
     reward: { treats: 0, friendship: 0 },
   },
+  // The story: Duke and the contests.
+  meetDuke: {
+    title: `Meet the new dog from next door`,
+    reward: { treats: 2, friendship: 2 },
+  },
+  contestFetch: {
+    title: `Contest: the Fetch Race against ${NAMES.rival}`,
+    reward: { treats: 4, friendship: 3 },
+  },
+  contestEggs: {
+    title: `Contest: the Painted Egg Hunt against ${NAMES.rival}`,
+    reward: { treats: 4, friendship: 3 },
+  },
+  contestDig: {
+    title: `Contest: the Treasure Dig-Off against ${NAMES.rival}`,
+    reward: { treats: 4, friendship: 3 },
+  },
+  herdTrial: {
+    title: `Contest: the Herding Trial against ${NAMES.rival}`,
+    reward: { treats: 6, friendship: 4 },
+  },
+  // The story: the Goldsby plan.
+  letter: {
+    title: `Bring the fancy letter to ${FARMER}`,
+    reward: { treats: 2, friendship: 2 },
+  },
+  truckClues: {
+    title: 'Find out what the weird truck is up to',
+    reward: { treats: 5, friendship: 3 },
+  },
+  truckCall: {
+    title: 'Sneak up and listen in on the truck driver',
+    reward: { treats: 5, friendship: 3 },
+  },
+  followGoldsby: {
+    title: `Keep an eye on ${NAMES.richGuy}`,
+    reward: { treats: 5, friendship: 4 },
+  },
+  surveyFlags: {
+    title: 'Pull up the survey flags and bury them',
+    reward: { treats: 6, friendship: 4 },
+  },
+  drone: {
+    title: 'Chase off the spraying drone',
+    reward: { treats: 6, friendship: 4 },
+  },
+  rallyFriends: {
+    title: 'Ask your friends to help save the farm',
+    reward: { treats: 5, friendship: 5 },
+  },
+  natureTour: {
+    title: `Show ${NAMES.inspector} what makes the farm special`,
+    reward: { treats: 8, friendship: 5 },
+  },
+  finaleWake: {
+    title: `Wake up ${NAMES.rooster}!`,
+    reward: { treats: 3, friendship: 2 },
+  },
+  finaleStop: {
+    title: 'Stop the bulldozer!',
+    reward: { treats: 5, friendship: 3 },
+  },
+  finaleWisp: {
+    title: 'Ask the golden wisp for help',
+    reward: { treats: 5, friendship: 3 },
+  },
+  finale: {
+    title: 'Save the farm!',
+    reward: { treats: 20, friendship: 10 },
+  },
   goToBed: {
     title: 'Go to bed',
     reward: { treats: 0, friendship: 0 },

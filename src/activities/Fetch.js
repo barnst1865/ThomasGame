@@ -93,12 +93,18 @@ export class FetchGame {
       return d > range[0] && d < range[1];
     });
     const target = Phaser.Utils.Array.GetRandom(choices.length ? choices : spots);
+    this.ball = this.toss(this.mode.kind, target, (ball) => this.landed(ball));
+  }
+
+  // Farmer Hazel throws something (a ball or a stick) in a high arc.
+  // Returns the item; `onLanded(item)` is called when it hits the ground.
+  toss(kind, target, onLanded) {
+    const { scene } = this;
+    const farmer = scene.farmer;
     farmer.throwToward(target);
     sfx.throw();
-
-    const ball = scene.spawnItem(this.mode.kind, farmer.x, farmer.y - 14);
+    const ball = scene.spawnItem(kind, farmer.x, farmer.y - 14);
     ball.inFlight = true;
-    this.ball = ball;
     const shadow = scene.add.image(farmer.x, farmer.y, 'shadow').setScale(0.6);
     const start = { x: farmer.x, y: farmer.y };
     const dist = distance(start, target);
@@ -118,9 +124,21 @@ export class FetchGame {
         shadow.destroy();
         ball.inFlight = false;
         ball.setPosition(target.x, target.y).setDepth(target.y);
-        this.landed(ball);
+        onLanded(ball);
       },
     });
+    return ball;
+  }
+
+  // Places in the yard where a ball can land, `near` to `far` from her.
+  throwSpots(near = 56, far = 140) {
+    const farmer = this.scene.farmer;
+    const spots = this.modes.ball.spots;
+    const choices = spots.filter((s) => {
+      const d = distance(s, farmer);
+      return d > near && d < far;
+    });
+    return choices.length ? choices : spots;
   }
 
   landed(ball) {

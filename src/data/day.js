@@ -16,6 +16,7 @@ import { createRng } from '../systems/rng.js';
 import { NAMES } from './characters.js';
 import { nightPlan, nightJobs, nightIntro } from './nights.js';
 import { eventsFor } from './events.js';
+import { NEW_STORY, storyBeats } from './story.js';
 
 export const DAY_PARTS = [
   {
@@ -125,22 +126,37 @@ const VISITS = {
   dinner: { event: 'shop', jobs: ['shopVisit'], intro: `The ${NAMES.shop} is coming!` },
 };
 
-// Everything that happens on a given day, part by part.
-export function planDay(day) {
-  const events = eventsFor(day);
+// Jobs that take over a whole part of the day (the herding trial is the
+// afternoon's herding).
+const REPLACES_EVERYDAY = new Set(['herdTrial']);
+
+// Everything that happens on a given day, part by part. `story` says when
+// the story chapters start (see story.js).
+export function planDay(day, story = NEW_STORY) {
+  const events = eventsFor(day, story);
+  const beats = storyBeats(day, story);
   return DAY_PARTS.map((base) => {
+    const beat = beats[base.id];
     if (base.id === 'night') {
+      if (beat) {
+        // The story's big night: no prowlers, just the finale.
+        const night = { threats: [], wisps: 0, friendly: false, finale: true };
+        return { ...base, jobs: [...beat.jobs], intro: beat.intro, night, story: beat };
+      }
       const night = nightPlan(day);
       return { ...base, jobs: nightJobs(night), intro: nightIntro(night), night };
     }
-    const special = SPECIALS[base.id] ? specialFor(day, base.id) : null;
+    // A story beat with its own jobs replaces the special activity.
+    const special = SPECIALS[base.id] && !beat?.jobs ? specialFor(day, base.id) : null;
     const visit = VISITS[base.id] && events[VISITS[base.id].event] ? VISITS[base.id] : null;
+    const everyday = beat?.jobs?.some((j) => REPLACES_EVERYDAY.has(j)) ? [] : base.jobs;
     return {
       ...base,
-      jobs: [...base.jobs, ...(special?.jobs ?? []), ...(visit?.jobs ?? [])],
-      intro: [base.intro, special?.intro, visit?.intro].filter(Boolean).join(' '),
-      farmer: special?.farmer ?? base.farmer,
+      jobs: [...everyday, ...(special?.jobs ?? []), ...(beat?.jobs ?? []), ...(beat?.add ?? []), ...(visit?.jobs ?? [])],
+      intro: [everyday.length ? base.intro : '', special?.intro, beat?.intro, visit?.intro].filter(Boolean).join(' '),
+      farmer: beat?.farmer ?? special?.farmer ?? base.farmer,
       special: special?.id,
+      story: beat ?? null,
       events,
     };
   });

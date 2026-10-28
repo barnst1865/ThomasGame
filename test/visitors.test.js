@@ -10,15 +10,15 @@ import { createNewSave, parseSave } from '../src/systems/saveGame.js';
 const days = (from, to) => Array.from({ length: to - from + 1 }, (_, i) => from + i);
 
 test('Mo brings the mail every 3 days from day 3, but not on day 15', () => {
-  assert.deepEqual(days(1, 28).filter(mailToday), [3, 6, 9, 12, 18, 21, 24, 27]);
+  assert.deepEqual(days(1, 28).filter((d) => mailToday(d)), [3, 6, 9, 12, 18, 21, 24, 27]);
 });
 
 test('there is a present for every mail day in the first season', () => {
-  assert.equal(GIFTS.length, days(1, 28).filter(mailToday).length);
+  assert.equal(GIFTS.length, days(1, 28).filter((d) => mailToday(d)).length);
 });
 
 test('the Wagtail Wagon comes every 4 days from day 4', () => {
-  assert.deepEqual(days(1, 28).filter(shopToday), [4, 8, 12, 16, 20, 24, 28]);
+  assert.deepEqual(days(1, 28).filter((d) => shopToday(d)), [4, 8, 12, 16, 20, 24, 28]);
 });
 
 test('mail and shop days add their jobs to the right part of the day', () => {

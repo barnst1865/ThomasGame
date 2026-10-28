@@ -60,13 +60,19 @@ export class Sheep extends Phaser.Physics.Arcade.Sprite {
     return this.state === 'grazing' ? ctx.roamRect : ctx.penRect;
   }
 
-  // ctx: { dog, flock, herdRadius, bark, penRect, roamRect, pull }
+  // ctx: { dog, herders, flock, herdRadius, bark, penRect, roamRect, pull }
+  // herders: the dogs sheep move away from (usually just yours)
   // pull: { appliesTo, gate, toward, approach, wanderChance } or null
   update(dt, ctx) {
     const me = this.feet;
     let vx = 0;
     let vy = 0;
-    const scare = ctx.dog.mode === 'sleep' ? { strength: 0 } : flee(me, ctx.dog.feet, ctx.herdRadius);
+    let scare = { strength: 0 };
+    for (const herder of ctx.herders ?? [ctx.dog]) {
+      if (herder.mode === 'sleep' || herder.mode === 'watch') continue;
+      const s = flee(me, herder.feet, ctx.herdRadius);
+      if (s.strength > scare.strength) scare = s;
+    }
 
     if (ctx.bark) {
       const away = flee(me, ctx.bark, ctx.bark.radius);

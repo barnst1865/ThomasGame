@@ -79,6 +79,27 @@ Each one earns a fancy feather. Three feathers make a Feather Cap to wear.
 Farmer Hazel always works out whose idea it was. On other days Pickles
 naps somewhere sunny, and you can pet her.
 
+### Duke and the Great Farm Dog Contest
+
+On day 3, Gus from next door walks up the road with Duke, a fancy show dog,
+and challenges you to four contests over the next two weeks:
+
+| Day | Contest            | How to win                                                    |
+| --- | ------------------ | ------------------------------------------------------------- |
+| 5   | Fetch Race         | First dog to bring Farmer Hazel's ball back 3 times           |
+| 8   | Painted Egg Hunt   | First dog to put 5 painted eggs in the basket                 |
+| 11  | Treasure Dig-Off   | Sniff for wavy lines of scent and dig up the most treasures   |
+| 14  | Herding Trial      | Duke herds the flock into the pen first; beat his time        |
+
+Talk to Gus when you're ready to start. Duke is quick, but he stops to show
+off now and then. Each win is worth 5 extra treats. At the end, the winner
+gets the Golden Bone trophy (a tie means one each, and Duke gets a ribbon
+if he wins). It sits next to your doghouse for good. Win or lose, Duke
+becomes your friend.
+
+A game saved before Duke existed starts his story on the day it's next
+played, so nobody misses it.
+
 ### Visitors, presents and rewards
 
 - **Mo the mail carrier** walks up the road every 3 days (from day 3) and
@@ -158,6 +179,9 @@ tough each prowler is) is in `src/data/nights.js`. The jobs themselves
 come or how many times Farmer Hazel throws the ball are in `src/config.js`.
 When the mail and the shop come is in `src/data/events.js`, the presents
 are in `src/data/gifts.js`, and the shop's shelves in `src/data/shop.js`.
+The story (which day Duke arrives, which days the contests are) is in
+`src/data/story.js`, and the contests themselves in
+`src/activities/Contests.js`.
 
 ## Adding a new dog breed
 
@@ -181,11 +205,12 @@ src/entities/           the dog, sheep, hens, farmer, visitors, prowlers,
                         crows, hawk, butterflies, wisps, items
 src/activities/         each special activity (fetch, butterflies, pond day,
                         lost things, strays, crows, hawk, dinner), the mail,
-                        the shop van and the night watch
+                        the shop van, Pickles, the rooster's mischief, Duke
+                        and his contests, and the night watch
 src/ui/                 menus and screens (shop, toy box, touch buttons)
 src/systems/            the day plan, seasons, saving, jobs, sounds, movement math
 src/data/               names, breeds, the parts of the day, nights, visitors,
-                        presents, the shop, jobs, the farmer's lines
+                        presents, the shop, the story, jobs, everyone's lines
 src/world/              the farm's layout and building it on screen
 src/art/                all the pixel art, drawn with code
 src/input/controls.js   keys mapped to actions

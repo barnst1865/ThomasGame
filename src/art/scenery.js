@@ -491,6 +491,114 @@ export function drawVanSide(canvas) {
   outlineCanvas(canvas);
 }
 
+// The weird black truck: a box truck with a dish on the roof.
+const TRUCK = { body: '#2e2e38', dark: '#1e1e26', light: '#4a4a58', glass: '#5a6a7a', shine: '#8a9aaa', tire: '#18161a', hub: '#8a8a94' };
+
+export function drawTruckBack(canvas) {
+  const ctx = canvas.getContext('2d');
+  box(ctx, 6, 29, 6, 6, TRUCK.tire);
+  box(ctx, 28, 29, 6, 6, TRUCK.tire);
+  box(ctx, 3, 5, 34, 25, TRUCK.body);
+  box(ctx, 3, 5, 34, 2, TRUCK.light);
+  box(ctx, 19, 8, 2, 19, TRUCK.dark);
+  box(ctx, 16, 15, 2, 4, TRUCK.hub);
+  box(ctx, 22, 15, 2, 4, TRUCK.hub);
+  box(ctx, 4, 22, 3, 4, '#e25d6a');
+  box(ctx, 33, 22, 3, 4, '#e25d6a');
+  box(ctx, 14, 0, 12, 2, TRUCK.hub);
+  box(ctx, 19, 2, 2, 3, TRUCK.hub);
+  box(ctx, 1, 27, 38, 3, TRUCK.hub);
+  outlineCanvas(canvas);
+}
+
+export function drawTruckSide(canvas) {
+  const ctx = canvas.getContext('2d');
+  // The box on the left, the cab on the right.
+  box(ctx, 2, 10, 44, 26, TRUCK.body);
+  box(ctx, 2, 10, 44, 2, TRUCK.light);
+  box(ctx, 46, 18, 16, 18, TRUCK.body);
+  box(ctx, 49, 20, 11, 7, TRUCK.glass);
+  box(ctx, 50, 21, 2, 2, TRUCK.shine);
+  box(ctx, 46, 29, 16, 1, TRUCK.dark);
+  box(ctx, 6, 28, 36, 1, TRUCK.dark);
+  box(ctx, 5, 14, 1, 12, TRUCK.dark);
+  // A satellite dish and an antenna with blinking lights.
+  box(ctx, 20, 6, 2, 4, TRUCK.hub);
+  box(ctx, 15, 2, 12, 2, TRUCK.hub);
+  box(ctx, 17, 4, 8, 2, TRUCK.hub);
+  pixel(ctx, 21, 1, '#e25d6a');
+  box(ctx, 58, 12, 1, 6, TRUCK.hub);
+  pixel(ctx, 58, 11, '#e25d6a');
+  box(ctx, 0, 34, 64, 3, TRUCK.dark);
+  for (const cx of [13, 52]) {
+    disc(ctx, cx, 37, 5, TRUCK.tire);
+    disc(ctx, cx, 37, 2, TRUCK.hub);
+  }
+  outlineCanvas(canvas);
+}
+
+// Mr. Goldsby's shiny gold car.
+const CAR = { body: '#e0b43a', dark: '#b8892a', light: '#fff0a0', glass: '#bfe3f2', tire: '#2b2024', hub: '#d9d9e0' };
+
+export function drawCarBack(canvas) {
+  const ctx = canvas.getContext('2d');
+  box(ctx, 4, 17, 5, 5, CAR.tire);
+  box(ctx, 25, 17, 5, 5, CAR.tire);
+  box(ctx, 8, 2, 18, 8, CAR.body);
+  box(ctx, 10, 4, 14, 5, CAR.glass);
+  box(ctx, 2, 9, 30, 10, CAR.body);
+  box(ctx, 2, 9, 30, 1, CAR.light);
+  box(ctx, 3, 12, 4, 2, '#e25d6a');
+  box(ctx, 27, 12, 4, 2, '#e25d6a');
+  box(ctx, 12, 13, 10, 3, CAR.light);
+  box(ctx, 1, 17, 32, 2, CAR.dark);
+  outlineCanvas(canvas);
+}
+
+export function drawCarSide(canvas) {
+  const ctx = canvas.getContext('2d');
+  box(ctx, 2, 12, 52, 9, CAR.body);
+  box(ctx, 14, 4, 26, 9, CAR.body);
+  box(ctx, 17, 6, 9, 6, CAR.glass);
+  box(ctx, 28, 6, 9, 6, CAR.glass);
+  box(ctx, 2, 12, 52, 1, CAR.light);
+  box(ctx, 2, 17, 52, 1, CAR.dark);
+  box(ctx, 52, 13, 2, 2, '#fff8d0');
+  box(ctx, 2, 13, 2, 2, '#e25d6a');
+  for (const cx of [12, 44]) {
+    disc(ctx, cx, 21, 4, CAR.tire);
+    disc(ctx, cx, 21, 2, CAR.hub);
+  }
+  outlineCanvas(canvas);
+}
+
+// A big yellow bulldozer, seen from behind as it rumbles up the road, with
+// someone in a tall hat at the wheel.
+const DOZER = { body: '#f2b83a', dark: '#c98a1a', light: '#ffe08a', track: '#3a3036', trackLight: '#5a5058', glass: '#5a6a7a', pipe: '#4a4a52', hat: '#2a2230' };
+
+export function drawBulldozer(canvas) {
+  const ctx = canvas.getContext('2d');
+  box(ctx, 1, 20, 10, 22, DOZER.track);
+  box(ctx, 37, 20, 10, 22, DOZER.track);
+  for (let y = 22; y < 42; y += 3) {
+    box(ctx, 1, y, 10, 1, DOZER.trackLight);
+    box(ctx, 37, y, 10, 1, DOZER.trackLight);
+  }
+  box(ctx, 9, 22, 30, 18, DOZER.body);
+  box(ctx, 9, 22, 30, 2, DOZER.light);
+  box(ctx, 9, 36, 30, 4, DOZER.dark);
+  box(ctx, 13, 4, 22, 19, DOZER.body);
+  box(ctx, 16, 7, 16, 10, DOZER.glass);
+  box(ctx, 13, 4, 22, 2, DOZER.light);
+  box(ctx, 22, 8, 4, 6, DOZER.hat);
+  box(ctx, 20, 13, 8, 1, DOZER.hat);
+  box(ctx, 36, 8, 3, 14, DOZER.pipe);
+  box(ctx, 11, 30, 3, 3, '#e25d6a');
+  box(ctx, 34, 30, 3, 3, '#e25d6a');
+  for (let x = 16; x < 32; x += 4) box(ctx, x, 37, 2, 2, '#2e2a26');
+  outlineCanvas(canvas);
+}
+
 export function drawTrough(canvas) {
   const ctx = canvas.getContext('2d');
   box(ctx, 1, 3, 30, 12, '#8a5a35');

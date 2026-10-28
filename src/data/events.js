@@ -4,23 +4,23 @@
 //   mail:  Mo the mail carrier brings a package in the morning
 //   shop:  the Wagtail Wagon parks by the road at sunset
 
+import { NEW_STORY, letterDay } from './story.js';
+
 export const MAIL = { first: 3, every: 3 };
 export const SHOP = { first: 4, every: 4 };
 
-// Day 15's mail is a special letter (coming in a later chapter), so Mo
-// doesn't bring a present that day.
-const NO_PRESENT_DAYS = new Set([15]);
-
 const onSchedule = (day, { first, every }) => day >= first && (day - first) % every === 0;
 
-export function mailToday(day) {
-  return onSchedule(day, MAIL) && !NO_PRESENT_DAYS.has(day);
+// On the day of the special letter (see story.js), Mo brings that instead
+// of a present.
+export function mailToday(day, story = NEW_STORY) {
+  return onSchedule(day, MAIL) && day !== letterDay(story);
 }
 
 export function shopToday(day) {
   return onSchedule(day, SHOP);
 }
 
-export function eventsFor(day) {
-  return { mail: mailToday(day), shop: shopToday(day) };
+export function eventsFor(day, story = NEW_STORY) {
+  return { mail: mailToday(day, story), shop: shopToday(day) };
 }

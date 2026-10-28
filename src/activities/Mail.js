@@ -1,7 +1,8 @@
 // Mo the mail carrier walks up the road and leaves a package by the
 // mailbox. The dog brings it to Farmer Hazel, and she opens it: a present
-// that makes a job easier (see src/data/gifts.js). Barking at Mo is
-// allowed, but he jumps every time.
+// that makes a job easier (see src/data/gifts.js). Once, instead, he brings
+// Mr. Goldsby's fancy letter (the start of the Goldsby plan). Barking at Mo
+// is allowed, but he jumps every time.
 
 import { POINTS, ROAD_END } from '../world/farmMap.js';
 import { Walker } from '../entities/Walker.js';
@@ -22,9 +23,12 @@ export class MailDelivery {
     this.package = null;
     this.arriveIn = null;
     this.spooked = 0;
+    this.letter = false;
   }
 
-  start() {
+  // letter: Mr. Goldsby's letter instead of a package.
+  start({ letter = false } = {}) {
+    this.letter = letter;
     this.arriveIn = ARRIVE_AFTER;
   }
 
@@ -39,10 +43,15 @@ export class MailDelivery {
   dropOff(corner) {
     const { scene, mo } = this;
     mo.face('left');
-    this.package = scene.spawnItem('package', POINTS.packageDrop.x, POINTS.packageDrop.y);
+    this.package = scene.spawnItem(this.letter ? 'letter' : 'package', POINTS.packageDrop.x, POINTS.packageDrop.y);
     sfx.drop();
-    scene.hud.bubble(mo, pick(LINES.moDrop), 2.4, 28);
-    scene.hintOnce('package', `A package! Pick it up and bring it to ${FARMER_NAME}.`);
+    if (this.letter) {
+      scene.hud.bubble(mo, 'A very fancy letter today!', 2.4, 28);
+      scene.hud.toast(`A letter! Pick it up and bring it to ${FARMER_NAME}.`);
+    } else {
+      scene.hud.bubble(mo, pick(LINES.moDrop), 2.4, 28);
+      scene.hintOnce('package', `A package! Pick it up and bring it to ${FARMER_NAME}.`);
+    }
     scene.time.delayedCall(2600, () => {
       mo.walkTo([corner, POINTS.roadIn, ROAD_END], () => {
         mo.destroy();
@@ -56,7 +65,7 @@ export class MailDelivery {
   }
 
   get giveLabel() {
-    return `Give the package to ${FARMER_NAME}`;
+    return `Give the ${this.letter ? 'letter' : 'package'} to ${FARMER_NAME}`;
   }
 
   // Nobody can resist barking at the mail carrier.
@@ -82,6 +91,10 @@ export class MailDelivery {
     scene.removeItem(item);
     this.package = null;
     sfx.pickup();
+    if (this.letter) {
+      this.readLetter();
+      return;
+    }
     const name = scene.save.dog.name;
     const gift = nextGift(scene.save.gifts);
     const lines = gift
@@ -99,6 +112,18 @@ export class MailDelivery {
         scene.giveTreats(TREAT_BOX);
       }
       scene.progressTask('mail', 1);
+    });
+  }
+
+  // Mr. Goldsby wants to buy the farm. Farmer Hazel is not impressed.
+  readLetter() {
+    const { scene } = this;
+    const name = scene.save.dog.name;
+    const lines = [LINES.letterOpen, ...LINES.letterText, LINES.letterNo].map((l) => fill(l, name));
+    scene.farmer.talking = true;
+    scene.hud.dialogue(FARMER_NAME, lines, () => {
+      scene.farmer.talking = false;
+      scene.progressTask('letter', 1);
     });
   }
 

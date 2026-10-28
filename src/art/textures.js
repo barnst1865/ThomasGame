@@ -16,6 +16,14 @@ import {
   MAIL_CARRIER_COLORS,
   SHOPKEEPER,
   SHOPKEEPER_COLORS,
+  NEIGHBOR,
+  NEIGHBOR_COLORS,
+  DRIVER,
+  DRIVER_COLORS,
+  TYCOON,
+  TYCOON_COLORS,
+  INSPECTOR,
+  INSPECTOR_COLORS,
   WEASEL,
   WEASEL_COLORS,
   CROW,
@@ -75,6 +83,11 @@ import {
   drawDoghouse,
   drawVanBack,
   drawVanSide,
+  drawTruckBack,
+  drawTruckSide,
+  drawCarBack,
+  drawCarSide,
+  drawBulldozer,
   drawWashingLine,
   ROOF_COLORS,
   drawTrough,
@@ -87,7 +100,7 @@ import {
   TREE_W,
   TREE_H,
 } from './scenery.js';
-import { CAT, CAT_COLORS, ROOSTER, ROOSTER_COLORS, SHEET_HANGING, SHEET, SHEET_MUDDY, MUD, PAW_MUD, PAW_CAT, FEATHER } from './story.js';
+import * as STORY from './story.js';
 import { MAP_W, MAP_H } from '../world/farmMap.js';
 
 function canvasTexture(scene, key, width, height, draw) {
@@ -210,13 +223,27 @@ export function buildBaseTextures(scene) {
     'toy-box': TOY_BOX,
     'dinner-bowl': BOWL_EMPTY,
     'farmer-hat': HAT,
-    'sheet-hanging': SHEET_HANGING,
-    sheet: SHEET,
-    'sheet-muddy': SHEET_MUDDY,
-    mud: MUD,
-    'paw-mud': PAW_MUD,
-    'paw-cat': PAW_CAT,
-    feather: FEATHER,
+    'sheet-hanging': STORY.SHEET_HANGING,
+    sheet: STORY.SHEET,
+    'sheet-muddy': STORY.SHEET_MUDDY,
+    mud: STORY.MUD,
+    'paw-mud': STORY.PAW_MUD,
+    'paw-cat': STORY.PAW_CAT,
+    feather: STORY.FEATHER,
+    'egg-painted': STORY.EGG_PAINTED,
+    treasure: STORY.TREASURE,
+    trophy: STORY.TROPHY,
+    ribbon: STORY.RIBBON,
+    letter: STORY.LETTER,
+    blueprint: STORY.BLUEPRINT,
+    'sample-bag': STORY.SAMPLE_BAG,
+    'farm-map': STORY.FARM_MAP,
+    flag: STORY.FLAG,
+    keys: STORY.KEYS,
+    nest: STORY.NEST,
+    'nature-sign': STORY.NATURE_SIGN,
+    frog: STORY.FROG,
+    rabbit: STORY.RABBIT,
   };
   for (const [key, item] of Object.entries(items)) pixelTexture(scene, key, item.rows, item.colors);
   for (const [id, icon] of Object.entries(GIFT_ICONS)) pixelTexture(scene, `gift-${id}`, icon.rows, icon.colors);
@@ -249,6 +276,10 @@ export function buildBaseTextures(scene) {
     'farmer-nohat': [FARMER_NOHAT, FARMER_COLORS],
     'mail-carrier': [MAIL_CARRIER, MAIL_CARRIER_COLORS],
     shopkeeper: [SHOPKEEPER, SHOPKEEPER_COLORS],
+    neighbor: [NEIGHBOR, NEIGHBOR_COLORS],
+    driver: [DRIVER, DRIVER_COLORS],
+    tycoon: [TYCOON, TYCOON_COLORS],
+    inspector: [INSPECTOR, INSPECTOR_COLORS],
   };
   for (const [key, [frames, colors]] of Object.entries(people)) {
     sheetTexture(scene, key, Object.entries(frames).map(([name, rows]) => [name, rows, colors]), 16, 24);
@@ -285,11 +316,15 @@ export function buildBaseTextures(scene) {
     anim(scene, `${key}-float`, key, ['a', 'b'], 4);
   }
 
-  sheetTexture(scene, 'cat', Object.entries(CAT).map(([pose, rows]) => [pose, rows, CAT_COLORS]), 16, 16);
+  sheetTexture(scene, 'cat', Object.entries(STORY.CAT).map(([pose, rows]) => [pose, rows, STORY.CAT_COLORS]), 16, 16);
   anim(scene, 'cat-walk', 'cat', ['walk1', 'walk2'], 9);
-  sheetTexture(scene, 'rooster', Object.entries(ROOSTER).map(([pose, rows]) => [pose, rows, ROOSTER_COLORS]), 16, 16);
+  sheetTexture(scene, 'rooster', Object.entries(STORY.ROOSTER).map(([pose, rows]) => [pose, rows, STORY.ROOSTER_COLORS]), 16, 16);
   anim(scene, 'rooster-walk', 'rooster', ['walk1', 'walk2'], 8);
   anim(scene, 'rooster-peck', 'rooster', ['walk1', 'crow', 'crow', 'walk1'], 4, 0);
+  sheetTexture(scene, 'bee', Object.entries(STORY.BEE).map(([pose, rows]) => [pose, rows, STORY.BEE_COLORS]), 9, 8);
+  anim(scene, 'bee-buzz', 'bee', ['a', 'b'], 14);
+  sheetTexture(scene, 'drone', Object.entries(STORY.DRONE).map(([pose, rows]) => [pose, rows, STORY.DRONE_COLORS]), 22, 12);
+  anim(scene, 'drone-spin', 'drone', ['a', 'b'], 16);
 
   sheetTexture(scene, 'crow', Object.entries(CROW).map(([pose, rows]) => [pose, rows, CROW_COLORS]), 16, 16);
   anim(scene, 'crow-fly', 'crow', ['fly1', 'fly2'], 8);
@@ -302,6 +337,11 @@ export function buildBaseTextures(scene) {
   canvasTexture(scene, 'washing-line', 60, 28, (canvas) => drawWashingLine(canvas));
   canvasTexture(scene, 'van-back', 40, 36, (canvas) => drawVanBack(canvas));
   canvasTexture(scene, 'van-side', 64, 44, (canvas) => drawVanSide(canvas));
+  canvasTexture(scene, 'truck-back', 40, 36, (canvas) => drawTruckBack(canvas));
+  canvasTexture(scene, 'truck-side', 64, 44, (canvas) => drawTruckSide(canvas));
+  canvasTexture(scene, 'car-back', 34, 23, (canvas) => drawCarBack(canvas));
+  canvasTexture(scene, 'car-side', 56, 26, (canvas) => drawCarSide(canvas));
+  canvasTexture(scene, 'bulldozer', 48, 44, (canvas) => drawBulldozer(canvas));
   canvasTexture(scene, 'trough', 32, 16, (canvas) => drawTrough(canvas));
   canvasTexture(scene, 'scarecrow', 16, 28, (canvas) => drawScarecrow(canvas));
   canvasTexture(scene, 'sign', 16, 20, (canvas) => drawSign(canvas));

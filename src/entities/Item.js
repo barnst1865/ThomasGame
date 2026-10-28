@@ -13,10 +13,14 @@ export const ITEM_NAMES = {
   'dinner-bowl': 'dinner bowl',
   'farmer-hat': 'hat',
   sheet: 'sheet',
+  'egg-painted': 'painted egg',
+  letter: 'fancy letter',
+  flag: 'survey flag',
 };
 
-// Only the dog's own things go in the ground.
-export const BURYABLE = new Set(['bone']);
+// Only the dog's own things go in the ground (and Mr. Goldsby's survey
+// flags, which nobody wants).
+export const BURYABLE = new Set(['bone', 'flag']);
 
 export class Item extends Phaser.GameObjects.Image {
   constructor(scene, x, y, kind) {

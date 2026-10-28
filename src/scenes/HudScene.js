@@ -32,6 +32,7 @@ export class HudScene extends Phaser.Scene {
     this.bubbles = [];
     this.lastTaskKey = '';
     this.lastStatsKey = '';
+    this.scoreBox = null; // made when first needed (the scene restarts each day)
 
     this.buildDayPanel();
     this.buildStats();
@@ -474,6 +475,37 @@ export class HudScene extends Phaser.Scene {
     menu.destroy();
     this.pauseMenu = null;
     this.modal = null;
+  }
+
+  // ----------------------------------------------------------- contests
+
+  // A little scoreboard under the day panel (null hides it).
+  setScore(text) {
+    if (!this.scoreBox) {
+      const g = drawPanel(this.add.graphics(), 12, 98, 226, 40, { fill: 0xfff3c4 });
+      this.scoreText = this.add.text(125, 118, '', textStyle(18, COLORS.ink, { fontStyle: 'bold' })).setOrigin(0.5);
+      this.scoreBox = this.add.container(0, 0, [g, this.scoreText]).setDepth(6);
+    }
+    this.scoreBox.setVisible(Boolean(text));
+    if (text) this.scoreText.setText(text);
+  }
+
+  // "3, 2, 1, Go!" in big letters, then onDone.
+  countdown(onDone) {
+    const words = ['3', '2', '1', 'Go!'];
+    words.forEach((word, i) => {
+      this.time.delayedCall(i * 700, () => {
+        const t = this.add
+          .text(W / 2, H / 2 - 60, word, textStyle(word === 'Go!' ? 72 : 64, COLORS.paper, { fontStyle: 'bold' }))
+          .setOrigin(0.5)
+          .setStroke(COLORS.woodDark, 10)
+          .setDepth(23)
+          .setScale(1.4);
+        sfx.blip();
+        this.tweens.add({ targets: t, scale: 1, alpha: 0, duration: 650, ease: 'Quad.In', onComplete: () => t.destroy() });
+        if (i === words.length - 1) onDone();
+      });
+    });
   }
 
   // ------------------------------------------------- shop and toy box

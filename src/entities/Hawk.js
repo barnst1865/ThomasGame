@@ -4,6 +4,9 @@
 //
 // The hawk keeps track of the spot on the ground below it (`ground`) and
 // how high up it is (`alt`). Its shadow shows where it really is.
+//
+// Mr. Goldsby's spraying drone flies the same way (see Missions.js), with
+// its own look: { key: 'drone', frame: 'a', flap: 'drone-spin', turns: false }.
 
 import { normalize } from '../systems/steering.js';
 
@@ -14,10 +17,11 @@ const SPEED = { circle: 75, dive: 115, climb: 70, scared: 130, leave: 110 };
 
 export class Hawk extends Phaser.GameObjects.Sprite {
   // center: the middle of the coop yard
-  constructor(scene, center) {
+  constructor(scene, center, { key = 'hawk', frame = 'glide', flap = 'hawk-flap', turns = true } = {}) {
     const start = { x: center.x + 320, y: center.y - 160 };
-    super(scene, start.x, start.y, 'hawk', 'glide');
+    super(scene, start.x, start.y, key, frame);
     scene.add.existing(this);
+    this.look = { frame, flap, turns };
     this.center = center;
     this.ground = { ...start };
     this.alt = 110;
@@ -28,7 +32,7 @@ export class Hawk extends Phaser.GameObjects.Sprite {
     this.target = null; // the hen it's after
     this.done = false;
     this.events = [];
-    this.shade = scene.add.image(start.x, start.y, 'hawk', 'glide').setTintFill(0x1e2814).setAlpha(0.22);
+    this.shade = scene.add.image(start.x, start.y, key, frame).setTintFill(0x1e2814).setAlpha(0.22);
     this.icon = scene.add.image(0, 0, 'exclaim').setVisible(false).setDepth(8990);
   }
 
@@ -148,18 +152,21 @@ export class Hawk extends Phaser.GameObjects.Sprite {
         break;
     }
 
-    if (flapping) this.anims.play('hawk-flap', true);
+    // A drone's propellers never stop.
+    const { look } = this;
+    if (flapping || !look.turns) this.anims.play(look.flap, true);
     else {
       this.anims.stop();
-      this.setFrame('glide');
+      this.setFrame(look.frame);
     }
+    const turn = look.turns ? this.heading : 0;
     this.setPosition(this.ground.x, this.ground.y - this.alt);
-    this.setRotation(this.heading);
+    this.setRotation(turn);
     this.setScale(1 + Math.min(this.alt, 110) / 400);
     this.setDepth(8990);
     this.shade
       .setPosition(this.ground.x, this.ground.y)
-      .setRotation(this.heading)
+      .setRotation(turn)
       .setAlpha(0.32 - Math.min(this.alt, 110) / 600)
       .setDepth(this.ground.y - 0.5);
     const hen = this.target;
