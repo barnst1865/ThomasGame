@@ -123,6 +123,7 @@ export class MailDelivery {
     scene.farmer.talking = true;
     scene.hud.dialogue(FARMER_NAME, lines, () => {
       scene.farmer.talking = false;
+      scene.save.story.letterRead = true;
       scene.progressTask('letter', 1);
     });
   }

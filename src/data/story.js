@@ -19,7 +19,7 @@ export const RIVAL_START = 3;
 export const GOLDSBY_START = 15;
 
 // Chapters that are ready to play.
-export const CHAPTERS = { rival: true, goldsby: false };
+export const CHAPTERS = { rival: true, goldsby: true };
 
 // Days after the rival story starts.
 const RIVAL_BEATS = [
@@ -43,8 +43,9 @@ const GOLDSBY_BEATS = [
   { at: 13, part: 'night', jobs: ['finaleWake'], intro: 'Something big is rumbling up the road in the dark...' },
 ];
 
-export const RIVAL_DAYS = RIVAL_BEATS.map((b) => b.at);
-export const GOLDSBY_DAYS = GOLDSBY_BEATS.map((b) => b.at);
+// How many of each thing a story job takes.
+export const STORY_TARGETS = { truckClues: 3, followGoldsby: 3, surveyFlags: 5, drone: 3, rallyFriends: 3, natureTour: 5 };
+
 
 // Fills in when each story starts, for new and old saves alike. Returns
 // the save's story record.
@@ -54,6 +55,9 @@ export function ensureStory(save) {
   if (!Number.isInteger(story.goldsbyStart)) {
     story.goldsbyStart = Math.max(GOLDSBY_START, save.day, story.rivalStart + (GOLDSBY_START - RIVAL_START));
   }
+  // A save from before the Goldsby plan was in the game: start it now, from
+  // the letter, rather than halfway through.
+  if (story.goldsbyStart < save.day && !story.letterRead) story.goldsbyStart = save.day;
   if (!Array.isArray(story.contests)) story.contests = [];
   return story;
 }
@@ -78,6 +82,11 @@ export function storyBeats(day, story = NEW_STORY) {
 // The day the special letter comes (no present in the mail that day).
 export function letterDay(story = NEW_STORY) {
   return story.goldsbyStart;
+}
+
+// The night of the finale (no shop that day: everyone is busy).
+export function finaleDay(story = NEW_STORY) {
+  return story.goldsbyStart + GOLDSBY_BEATS[GOLDSBY_BEATS.length - 1].at;
 }
 
 // Which contest (0 to 3) is on this day, or -1.

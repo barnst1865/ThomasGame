@@ -72,6 +72,7 @@ export class DinnerScene {
     const result = contest >= 0 ? scene.save.story.contests[contest] : null;
     if (result) lines.push((result === 'won' ? LINES.dinnerContestWon : LINES.dinnerContestLost).replace('{contest}', CONTESTS[contest].name));
     if (contest === 3 && result) lines.push(scene.save.story.trophy === 'gold' ? LINES.dinnerTrophy : LINES.dinnerRibbon);
+    lines.push(...scene.goldsby.dinnerLines());
     lines.push(...scene.mischief.dinnerLines());
     // Before the first wisps come, she has noticed something odd.
     if (scene.tonight.wisps > 0 && !scene.save.flags.sawLights) {
@@ -110,6 +111,7 @@ export class DinnerScene {
   // "It's getting dark..." plus a word about who might come tonight.
   nightWarning() {
     const night = this.scene.tonight;
+    if (night.finale) return `${LINES.dinnerEnd} ${LINES.dinnerFinale}`;
     return `${LINES.dinnerEnd} ${LINES.dinnerNight[night.threats[0] ?? 'wisps']}`;
   }
 

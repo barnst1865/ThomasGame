@@ -181,9 +181,9 @@ export const LINES = {
   letterNo: "Sell the farm? Never! This is our home, {name}. Who does he think he is?",
   dinnerLetter: `I keep thinking about that letter from ${NAMES.richGuy}. Our farm is not for sale, {name}!`,
   truckArrive: 'A weird black truck is driving up the road...',
-  truckHint: `That truck is up to something. Sniff out what's going on, but don't let ${NAMES.driver} the driver see you!`,
+  truckHint: `That truck is up to something. Sniff out what's going on, but don't let ${NAMES.driver} the driver see you! Stay out of the yellow patch where he's looking.`,
   shoo: ['Hey! Shoo! Go home, doggy!', 'Scram, pup! No dogs near the truck!', 'Get away from there, you mutt!'],
-  shooHint: 'Uh oh, he saw you! Stay out of his flashlight, and sneak in when he looks the other way.',
+  shooHint: "Uh oh, he saw you! Stay out of the yellow patch where he's looking, and sneak in when he looks the other way.",
   clues: {
     blueprint: { title: 'A secret blueprint', text: 'Plans for a giant metal building... right where the sheep meadow is!' },
     sampleBag: { title: 'A bag of soil', text: `Dirt from ${NAMES.farmer}'s farm, with a label: "${NAMES.company}. Top secret!"` },
@@ -191,7 +191,7 @@ export const LINES = {
   },
   truckLeave: 'Ring ring! ... Yes, boss. I found everything. Coming back now.',
   dinnerClues: `Plans for a giant building on my meadow? And a map with our farm circled? I don't like this one bit, {name}.`,
-  callHint: `${NAMES.driver} is on the phone! Sneak up close to listen in, and keep out of his flashlight.`,
+  callHint: `${NAMES.driver} is on the phone! Sneak up close behind him to listen in. Keep out of the yellow patch where he's looking.`,
   callBits: ['Uh-huh...', 'Yes, boss...', 'Mm-hmm.', 'Right away, boss.'],
   callLines: [
     `Yes, ${NAMES.richGuy}. The soil is perfect for your MegaFarm.`,
@@ -231,7 +231,7 @@ export const LINES = {
   ],
   rallyDuke: [
     'Woof! Of course I will help. What are friends for?',
-    `${NAMES.neighbor} says to bark for us if anything happens. We'll come running!`,
+    "Just bark for us if anything happens, {name}. We'll come running!",
   ],
   dinnerRally: "Everyone came by today! It's good to have friends, {name}.",
   fernArrive: `${NAMES.inspector} the nature inspector is walking up the road!`,
@@ -256,6 +256,7 @@ export const LINES = {
   dinnerFinale: 'Something feels odd tonight, {name}. Stay alert, and call your friends if you need them.',
   finaleRumble: 'Something big is rumbling up the road in the dark...',
   finaleWakeHint: `It's a bulldozer! Quick, bark at the coop to wake up ${NAMES.rooster}!`,
+  finaleWakeFirst: `Wake up ${NAMES.rooster} first! Bark at the coop, and everyone will come.`,
   finaleCrow: 'COCK-A-DOODLE-DOOOOO!',
   finaleHazel: `What's all that noise? ... A BULLDOZER? ${NAMES.richGuy}, what are you doing on my farm?`,
   finaleGoldsby: "Ho ho! If you won't sell, I'll just get started without you!",

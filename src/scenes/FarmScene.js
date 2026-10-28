@@ -24,7 +24,8 @@ import { ShopVan } from '../activities/ShopVan.js';
 import { Pickles } from '../activities/Pickles.js';
 import { Mischief } from '../activities/Mischief.js';
 import { Rival } from '../activities/Rival.js';
-import { ensureStory } from '../data/story.js';
+import { GoldsbyPlan } from '../activities/Goldsby.js';
+import { ensureStory, STORY_TARGETS } from '../data/story.js';
 import { NAMES } from '../data/characters.js';
 import { perksFor } from '../data/gifts.js';
 import { buildDogTexture } from '../art/textures.js';
@@ -120,6 +121,7 @@ export class FarmScene extends Phaser.Scene {
         herdSheep: SHEEP.count,
         chaseCrows: CROWS.total,
         hawk: DAY.hawkScares,
+        ...STORY_TARGETS,
         ...nightTargets(this.tonight),
       },
       titles: { lostThing: this.lostThing.title },
@@ -141,6 +143,7 @@ export class FarmScene extends Phaser.Scene {
     const lostToday = this.dayParts.some((p) => p.jobs.includes('lostThing')) ? this.lostThing.kind : null;
     this.mischief = new Mischief(this, lostToday);
     this.rival = new Rival(this);
+    this.goldsby = new GoldsbyPlan(this);
 
     this.scene.launch('Hud', { farm: this });
     this.hud = this.scene.get('Hud');
@@ -300,7 +303,7 @@ export class FarmScene extends Phaser.Scene {
     const rt = this.nightLayer.setVisible(true).setAlpha(darkness);
     rt.clear();
     rt.fill(0x141a3a, 1);
-    for (const light of [...this.view.lights, ...this.night.lights]) this.eraseLight(light.x, light.y, light.size);
+    for (const light of [...this.view.lights, ...this.night.lights, ...this.goldsby.lights]) this.eraseLight(light.x, light.y, light.size);
     // A little moonlight around the dog so you can always see where you are.
     this.eraseLight(this.dog.x, this.dog.y - 6, 128 * this.perks.light);
   }
@@ -355,6 +358,7 @@ export class FarmScene extends Phaser.Scene {
     if (has('shopVisit')) this.shopVan.start();
     if (has('findBowl')) this.pickles.startChase();
     this.rival.startPart(part);
+    this.goldsby.startPart(part);
     if (part.id === 'dinner') {
       this.crows.shoo();
       this.hawk.stop();
@@ -426,6 +430,7 @@ export class FarmScene extends Phaser.Scene {
       this.pickles,
       this.mischief,
       this.rival,
+      this.goldsby,
     ]) {
       activity.update(dt);
     }
@@ -548,6 +553,7 @@ export class FarmScene extends Phaser.Scene {
     for (const stray of waiting) {
       if (stray) list.push({ x: stray.x, y: stray.y - 8, color: 0xf2c84b });
     }
+    list.push(...this.goldsby.pointers);
     return list;
   }
 
@@ -578,6 +584,7 @@ export class FarmScene extends Phaser.Scene {
     this.mail.hearBark(this.bark);
     this.pickles.hearBark(this.bark);
     this.rival.hearBark(this.bark);
+    this.goldsby.hearBark(this.bark);
     let clucked = false;
     for (const hen of this.chickens) {
       if (hen.visible && distance(dog.feet, hen.feet) < radius * 0.7 && hen.scare(dog.feet) && !clucked) {
@@ -664,6 +671,7 @@ export class FarmScene extends Phaser.Scene {
       this.hud.bubble(dog, `Found my ${item.label}!`, 1.6, 18);
       return;
     }
+    if (dog.carrying && this.goldsby.bury(dog.carrying, tx, ty)) return;
     if (dog.carrying) {
       const item = dog.carrying;
       dog.carrying = null;
@@ -709,8 +717,8 @@ export class FarmScene extends Phaser.Scene {
     const farmerNear = this.farmer.available && distance(this.farmer.feet, p) < 26;
     const carried = dog.carrying;
     if (carried) {
-      const contest = this.rival.interaction(p, carried);
-      if (contest) return contest;
+      const story = this.goldsby.interaction(p, carried) ?? this.rival.interaction(p, carried);
+      if (story) return story;
       if (farmerNear && this.fetch.owns(carried)) {
         return { label: this.fetch.giveLabel, action: () => this.fetch.returnBall() };
       }
@@ -743,6 +751,7 @@ export class FarmScene extends Phaser.Scene {
     const atDinner = this.dinner.ready && (farmerNear || distance(POINTS.bowl, p) < 28);
     if (atDinner) return { label: 'Sit down for dinner', action: () => this.dinner.start() };
     const special =
+      this.goldsby.interaction(p, null) ??
       this.rival.interaction(p, null) ??
       this.pond.interaction(farmerNear) ??
       this.night.interaction(p) ??

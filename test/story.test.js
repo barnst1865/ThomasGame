@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CONTESTS, GOLDSBY_START, NEW_STORY, RIVAL_START, contestOn, ensureStory, letterDay, storyBeats } from '../src/data/story.js';
+import { CONTESTS, GOLDSBY_START, NEW_STORY, RIVAL_START, contestOn, ensureStory, finaleDay, letterDay, storyBeats } from '../src/data/story.js';
 import { planDay } from '../src/data/day.js';
 import { TASKS } from '../src/data/tasks.js';
 import { createNewSave, parseSave } from '../src/systems/saveGame.js';
-import { mailToday } from '../src/data/events.js';
+import { mailToday, shopToday } from '../src/data/events.js';
 
 const part = (day, id, story) => planDay(day, story).find((p) => p.id === id);
 
@@ -77,4 +77,61 @@ test('the story record survives saving and loading', () => {
   // Junk is dropped.
   const junk = parseSave(JSON.stringify({ ...save, story: { rivalStart: 'soon', contests: ['won', 'maybe', 7] } }));
   assert.deepEqual(junk.story.contests, ['won', null, null]);
+});
+
+test('the Goldsby plan runs from the letter on day 15 to the finale on night 28', () => {
+  const jobs = ['letter', 'truckClues', 'truckCall', 'followGoldsby', 'surveyFlags', 'drone', 'rallyFriends', 'natureTour', 'finaleWake'];
+  const when = {};
+  for (let day = 1; day <= 40; day++) {
+    for (const p of planDay(day)) for (const job of p.jobs) if (jobs.includes(job)) when[job] = [day, p.id];
+  }
+  assert.deepEqual(when, {
+    letter: [15, 'morning'],
+    truckClues: [16, 'afternoon'],
+    truckCall: [17, 'morning'],
+    followGoldsby: [18, 'afternoon'],
+    surveyFlags: [20, 'morning'],
+    drone: [22, 'afternoon'],
+    rallyFriends: [24, 'morning'],
+    natureTour: [26, 'break'],
+    finaleWake: [28, 'night'],
+  });
+});
+
+test('Mo brings the letter on day 15 instead of a package', () => {
+  const morning = part(15, 'morning');
+  assert.ok(morning.jobs.includes('letter'));
+  assert.ok(!morning.jobs.includes('mail'));
+});
+
+test('the finale night has no prowlers, and the shop stays away that day', () => {
+  const night = part(finaleDay(NEW_STORY), 'night');
+  assert.equal(finaleDay(NEW_STORY), 28);
+  assert.deepEqual(night.night.threats, []);
+  assert.equal(night.night.wisps, 0);
+  assert.equal(night.night.finale, true);
+  assert.equal(shopToday(28), false);
+  assert.ok(!part(28, 'dinner').jobs.includes('shopVisit'));
+  assert.ok(part(24, 'dinner').jobs.includes('shopVisit'));
+});
+
+test('an old save gets the whole Goldsby plan too, after Duke', () => {
+  const save = createNewSave({ name: 'Pepper', breedId: 'corgi' });
+  save.day = 20;
+  const story = ensureStory(save);
+  assert.equal(story.rivalStart, 20);
+  assert.equal(story.goldsbyStart, 32);
+  assert.ok(part(32, 'morning', story).jobs.includes('letter'));
+  assert.ok(part(45, 'night', story).jobs.includes('finaleWake'));
+});
+
+test('a save that went past day 15 before the Goldsby plan existed starts it from the letter', () => {
+  const save = createNewSave({ name: 'Pepper', breedId: 'corgi' });
+  save.day = 19;
+  save.story = { rivalStart: 3, goldsbyStart: 15, contests: ['won', 'won', 'lost', 'won'] };
+  assert.equal(ensureStory(save).goldsbyStart, 19);
+  // Once the letter has been read, the story stays where it is.
+  save.story.letterRead = true;
+  save.day = 25;
+  assert.equal(ensureStory(save).goldsbyStart, 19);
 });

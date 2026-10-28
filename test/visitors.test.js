@@ -18,7 +18,8 @@ test('there is a present for every mail day in the first season', () => {
 });
 
 test('the Wagtail Wagon comes every 4 days from day 4', () => {
-  assert.deepEqual(days(1, 28).filter((d) => shopToday(d)), [4, 8, 12, 16, 20, 24, 28]);
+  // Not on day 28, the night of the big finale.
+  assert.deepEqual(days(1, 32).filter((d) => shopToday(d)), [4, 8, 12, 16, 20, 24, 32]);
 });
 
 test('mail and shop days add their jobs to the right part of the day', () => {

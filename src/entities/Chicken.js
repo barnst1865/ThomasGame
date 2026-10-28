@@ -127,7 +127,8 @@ export class Chicken extends Phaser.Physics.Arcade.Sprite {
       this.roam = null;
     } else {
       const dogDist = this.nearDog(ctx.dog);
-      if (this.state === 'wander' && dogDist < 22 && this.flutter <= 0 && ctx.dog.mode !== 'sleep') this.scare(ctx.dog.feet);
+      // Hens scatter when the dog comes close. Sir Cluckington stands his ground (he's the boss).
+      if (this.state === 'wander' && this.color !== 'rooster' && dogDist < 22 && this.flutter <= 0 && ctx.dog.mode !== 'sleep') this.scare(ctx.dog.feet);
       if (this.flutter > 0) {
         this.flutter -= dt;
         vx = this.fleeDir.x * 75;

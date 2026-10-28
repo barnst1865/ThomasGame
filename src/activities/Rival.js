@@ -49,7 +49,8 @@ export class Rival {
   // ------------------------------------------------- coming and going
 
   // Gus and Duke appear (walking up the road, or already standing there).
-  arrive(gusSpot, dukeSpot, onArrive, { instant = false } = {}) {
+  // `direct` walks them straight to their spots from the top of the road.
+  arrive(gusSpot, dukeSpot, onArrive, { instant = false, direct = false } = {}) {
     const { scene } = this;
     const breed = dukeBreedFor(scene.breed.id);
     const from = instant ? null : ROAD_END;
@@ -69,7 +70,7 @@ export class Rival {
       waiting -= 1;
       if (waiting === 0) onArrive?.();
     };
-    const via = (spot) => [POINTS.roadIn, { x: POINTS.roadIn.x, y: MAIN_PATH_Y }, { x: spot.x, y: MAIN_PATH_Y }, spot];
+    const via = (spot) => (direct ? [POINTS.roadIn, spot] : [POINTS.roadIn, { x: POINTS.roadIn.x, y: MAIN_PATH_Y }, { x: spot.x, y: MAIN_PATH_Y }, spot]);
     this.gus.walkTo(via(gusSpot), both);
     this.dukeTo(via(dukeSpot), both);
   }

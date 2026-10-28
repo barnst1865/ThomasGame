@@ -131,15 +131,24 @@ missed but nobody is hurt.
    (shared on a tie; a ribbon if Duke wins), which stays by the doghouse.
    Duke becomes a friend win or lose. Old saves start the story on the
    day they're next played (`ensureStory` in `src/data/story.js`).
-4. The Goldsby plan (days 15 to 28): a letter, a weird truck to
-   investigate, Mr. Goldsby's plans for the farm, missions to stop him,
-   and a finale where all your friends help.
+4. The Goldsby plan (built, days 15 to 28): Mr. Goldsby's letter, a weird
+   black truck (sneak past the driver's line of sight to find 3 clues, then
+   listen in on his phone call), following Mr. Goldsby on his tour, burying
+   his survey flags, chasing off his spraying drone (it flies like the
+   hawk), asking Pickles, Sir Cluckington and Duke for help, and showing Ms.
+   Fern the nature inspector five wild things. On night 28 a bulldozer comes:
+   bark to wake the rooster (who wakes Farmer Hazel), bark at the bulldozer
+   until Duke arrives and Pickles steals the keys, then ask the golden wisp
+   for help. It lights up the farm with fireflies, Mr. Goldsby has a change
+   of heart, and the farm becomes a Protected Nature Farm. Nothing can be
+   failed. The shop skips day 28.
 
 ## Status
 
-**Version 0.5 is built.** Mail, presents, the shop on wheels and the toy
-box work, Pickles and Sir Cluckington liven up the farm, and Duke's
-contests run in the first two weeks. The task-driven day above works from start to finish, with nine special activities taking turns, four kinds of prowler,
+**Version 0.6 is built.** Mail, presents, the shop on wheels and the toy
+box work, Pickles and Sir Cluckington liven up the farm, Duke's contests
+run in the first two weeks, and the Goldsby plan fills the second two,
+ending with the finale on night 28. The task-driven day above works from start to finish, with nine special activities taking turns, four kinds of prowler,
 and the will-o'-wisps from night 4 on. The game pauses
 with a "Click to keep playing" button when it loses keyboard focus, and any
 key or a click wakes the dog up in the morning. Seasons change the farm's

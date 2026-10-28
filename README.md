@@ -100,6 +100,30 @@ becomes your friend.
 A game saved before Duke existed starts his story on the day it's next
 played, so nobody misses it.
 
+### The Goldsby plan
+
+In the second half of the month, Mr. Goldsby of Goldsby MegaFarms wants to
+buy the farm and turn it into a giant MegaFarm. Farmer Hazel says no, so
+it's up to you to find out what he's planning, and stop him:
+
+| Day | What happens                                                                                                                              |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| 15  | Mo brings a fancy letter. Take it to Farmer Hazel                                                                                         |
+| 16  | A weird black truck parks by the woods. Sniff out 3 clues without the driver seeing you (stay out of the yellow patch where he's looking) |
+| 17  | The truck is back. Sneak up behind the driver and listen in on his phone call                                                             |
+| 18  | Mr. Goldsby visits. Follow him around to hear his plans                                                                                   |
+| 20  | Survey flags all over the meadow. Pick them up and bury them                                                                              |
+| 22  | A drone sprays bug spray on the crops. Bark when it swoops down low                                                                       |
+| 24  | Ask Pickles, Sir Cluckington and Duke to help                                                                                             |
+| 26  | Show Ms. Fern, the nature inspector, the frog, the bird nest, the bees, the rabbits and the butterflies. She follows you around           |
+| 28  | The big night: a bulldozer rumbles up the road. Wake up Sir Cluckington, bark at the bulldozer, and ask the golden wisp for help          |
+
+Nothing can be lost: if the driver spots you, he just shoos you away to try
+again. After the farm is saved, a Protected Nature Farm sign stands by the
+road, and the days go on as usual. Like Duke's story, a game saved before
+the Goldsby plan existed starts it (from the letter) on the day it's next
+played.
+
 ### Visitors, presents and rewards
 
 - **Mo the mail carrier** walks up the road every 3 days (from day 3) and
@@ -179,9 +203,11 @@ tough each prowler is) is in `src/data/nights.js`. The jobs themselves
 come or how many times Farmer Hazel throws the ball are in `src/config.js`.
 When the mail and the shop come is in `src/data/events.js`, the presents
 are in `src/data/gifts.js`, and the shop's shelves in `src/data/shop.js`.
-The story (which day Duke arrives, which days the contests are) is in
-`src/data/story.js`, and the contests themselves in
-`src/activities/Contests.js`.
+The story (which day Duke arrives, which days the contests and missions
+are) is in `src/data/story.js`. The contests are in
+`src/activities/Contests.js`, the Goldsby missions in
+`src/activities/Missions.js`, and the big last night in
+`src/activities/Finale.js`.
 
 ## Adding a new dog breed
 
@@ -206,7 +232,8 @@ src/entities/           the dog, sheep, hens, farmer, visitors, prowlers,
 src/activities/         each special activity (fetch, butterflies, pond day,
                         lost things, strays, crows, hawk, dinner), the mail,
                         the shop van, Pickles, the rooster's mischief, Duke
-                        and his contests, and the night watch
+                        and his contests, the Goldsby missions and finale,
+                        and the night watch
 src/ui/                 menus and screens (shop, toy box, touch buttons)
 src/systems/            the day plan, seasons, saving, jobs, sounds, movement math
 src/data/               names, breeds, the parts of the day, nights, visitors,
