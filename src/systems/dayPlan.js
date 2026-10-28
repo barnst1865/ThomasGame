@@ -2,10 +2,13 @@
 // its jobs on the task board; when they're all finished, the day can move on.
 
 export class DayPlan {
-  constructor(board, parts, targets = {}) {
+  // targets: how many of each job, e.g. { collectEggs: 3 }
+  // titles: special titles for today, e.g. { lostThing: "Find Farmer Hazel's hat" }
+  constructor(board, parts, { targets = {}, titles = {} } = {}) {
     this.board = board;
     this.parts = parts;
-    this.targets = targets; // how many of each job, e.g. { collectEggs: 3 }
+    this.targets = targets;
+    this.titles = titles;
     this.index = -1;
   }
 
@@ -26,7 +29,7 @@ export class DayPlan {
     if (this.index >= this.parts.length - 1) return null;
     this.index += 1;
     const part = this.part;
-    for (const job of part.jobs) this.board.add(job, this.targets[job] ?? 1, part.id);
+    for (const job of part.jobs) this.board.add(job, this.targets[job] ?? 1, part.id, this.titles[job]);
     return part;
   }
 

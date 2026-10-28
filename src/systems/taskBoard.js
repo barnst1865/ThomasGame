@@ -7,12 +7,13 @@ export class TaskBoard {
   }
 
   // `part` is the part of the day the job belongs to (see src/data/day.js).
-  add(id, target = 1, part = null) {
+  // `title` replaces the usual title, e.g. "Find Farmer Hazel's hat".
+  add(id, target = 1, part = null, title = null) {
     const def = this.definitions[id];
     if (!def) throw new Error(`Unknown task: ${id}`);
     const existing = this.get(id);
     if (existing) return existing;
-    const task = { id, title: def.title, reward: def.reward, target, part, progress: 0, status: 'active' };
+    const task = { id, title: title ?? def.title, reward: def.reward, target, part, progress: 0, status: 'active' };
     this.tasks.push(task);
     return task;
   }

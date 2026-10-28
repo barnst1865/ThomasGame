@@ -40,6 +40,9 @@ export class Dog extends Phaser.Physics.Arcade.Sprite {
     this.barkCooldown = 0;
     this.pounceCooldown = 0;
     this.pounceHits = new Set();
+    this.swimming = false;
+    this.wet = 0; // seconds of dripping left after a swim
+    this.ripple = scene.add.image(x, y, 'ripple').setVisible(false);
   }
 
   get feet() {
@@ -94,8 +97,17 @@ export class Dog extends Phaser.Physics.Arcade.Sprite {
     }
 
     this.setDepth(this.y);
-    this.shadow.setPosition(this.x, this.y - 1).setDepth(this.y - 0.5).setVisible(this.mode !== 'sleep');
+    this.shadow.setPosition(this.x, this.y - 1).setDepth(this.y - 0.5).setVisible(this.mode !== 'sleep' && !this.swimming);
+    this.ripple.setPosition(this.x, this.y - 4).setDepth(this.y + 0.1).setVisible(this.swimming);
     this.updateCarried();
+  }
+
+  // In the water only the dog's head and back show above the surface.
+  setSwimming(swimming) {
+    if (swimming === this.swimming) return;
+    this.swimming = swimming;
+    if (swimming) this.setCrop(0, 0, this.frame.width, this.frame.height - 6);
+    else this.setCrop();
   }
 
   updateWalking(controls) {
@@ -103,6 +115,7 @@ export class Dog extends Phaser.Physics.Arcade.Sprite {
     const moving = move.x !== 0 || move.y !== 0;
     let speed = (controls.isDown('run') ? DOG.runSpeed : DOG.walkSpeed) * this.stats.speed;
     if (this.carrying) speed *= 0.85 * this.stats.carrySpeed;
+    if (this.swimming) speed *= DOG.swimSpeed;
     this.setVelocity(move.x * speed, move.y * speed);
 
     if (moving) {
@@ -134,13 +147,14 @@ export class Dog extends Phaser.Physics.Arcade.Sprite {
     return true;
   }
 
-  stun(fromX, fromY) {
+  // Knocked over by a lunge. Bigger animals push harder.
+  stun(fromX, fromY, force = 160) {
     if (this.mode === 'sleep') return;
     const dx = this.x - fromX;
     const dy = this.y - fromY;
     const len = Math.hypot(dx, dy) || 1;
     this.setMode('stunned', DOG.stunTime);
-    this.setVelocity((dx / len) * 160, (dy / len) * 160);
+    this.setVelocity((dx / len) * force, (dy / len) * force);
     this.setTint(0xffb0b0);
     this.scene.time.delayedCall(DOG.stunTime * 1000, () => this.clearTint());
   }
@@ -187,6 +201,7 @@ export class Dog extends Phaser.Physics.Arcade.Sprite {
 
   destroy(fromScene) {
     this.shadow?.destroy();
+    this.ripple?.destroy();
     super.destroy(fromScene);
   }
 }

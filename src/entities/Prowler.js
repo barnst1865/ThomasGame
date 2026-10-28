@@ -1,24 +1,27 @@
-// The night-time threat. It sneaks toward the coop to steal an egg. The
+// A night-time prowler (weasel, raccoon, coyote or wolf; see
+// src/data/nights.js). It sneaks toward its target to cause trouble. The
 // dog can bark to startle it and pounce to chase it off. It fights back
 // with quick lunges that knock the dog over (no one gets hurt).
 
-import { WEASEL } from '../config.js';
 import { normalize } from '../systems/steering.js';
 
 const NOTICE_RANGE = 72;
 const GIVE_UP_RANGE = 120;
 
-export class Weasel extends Phaser.GameObjects.Sprite {
-  constructor(scene, path, exitPath) {
+export class Prowler extends Phaser.GameObjects.Sprite {
+  // kind: an entry from PROWLERS; path: points from the woods to the target
+  constructor(scene, kind, path, exitPath) {
     const start = path[0];
-    super(scene, start.x, start.y, 'weasel', 'walk1');
+    super(scene, start.x, start.y, kind.name, 'walk1');
+    this.kind = kind;
     scene.add.existing(this);
     this.setOrigin(0.5, 1);
-    this.shadow = scene.add.image(this.x, this.y, 'shadow');
+    this.tall = this.frame.height;
+    this.shadow = scene.add.image(this.x, this.y, 'shadow').setScale(this.width / 14, 1);
     this.pips = scene.add.graphics();
     this.icon = scene.add.image(this.x, this.y, 'exclaim').setVisible(false);
-    this.hp = WEASEL.health;
-    this.maxHp = WEASEL.health;
+    this.hp = kind.health;
+    this.maxHp = kind.health;
     this.route = path.slice(1);
     this.exitPath = exitPath;
     this.state = 'sneak';
@@ -29,7 +32,6 @@ export class Weasel extends Phaser.GameObjects.Sprite {
     this.startleCooldown = 0;
     this.seenDog = false;
     this.done = false;
-    this.stoleEgg = false;
     this.events = []; // things the farm scene should react to
   }
 
@@ -49,7 +51,7 @@ export class Weasel extends Phaser.GameObjects.Sprite {
   startle() {
     // After a scare it gets used to barking for a moment, so barking alone can't win.
     if (['flee', 'lunge'].includes(this.state) || this.startleCooldown > 0) return false;
-    this.startleCooldown = 2.6;
+    this.startleCooldown = this.kind.startleCooldown;
     this.setState('startled', 1.1);
     this.seenDog = true;
     return true;
@@ -88,7 +90,7 @@ export class Weasel extends Phaser.GameObjects.Sprite {
     return false;
   }
 
-  // Moves unless that would put the weasel inside a wall or a building.
+  // Moves unless that would put it inside a wall, a building or the pond.
   tryMove(dx, dy) {
     const blocked = this.scene.isSolidAt.bind(this.scene);
     if (!blocked(this.x + dx, this.y - 3)) this.x += dx;
@@ -96,8 +98,9 @@ export class Weasel extends Phaser.GameObjects.Sprite {
     if (Math.abs(dx) > 0.01) this.setFlipX(dx < 0);
   }
 
-  // ctx: { dog, coopDoor }
+  // ctx: { dog, target }
   update(dt, ctx) {
+    const kind = this.kind;
     const dog = ctx.dog;
     this.invulnerable = Math.max(0, this.invulnerable - dt);
     this.startleCooldown = Math.max(0, this.startleCooldown - dt);
@@ -121,13 +124,13 @@ export class Weasel extends Phaser.GameObjects.Sprite {
           this.setState('steal');
           break;
         }
-        if (this.moveToward(next, WEASEL.sneakSpeed, dt)) this.route.shift();
+        if (this.moveToward(next, kind.sneakSpeed, dt)) this.route.shift();
         moving = true;
         break;
       }
       case 'confront': {
         if (!dogAwake || dist > GIVE_UP_RANGE) {
-          this.route = [ctx.coopDoor];
+          this.route = [ctx.target];
           this.setState('sneak');
           break;
         }
@@ -146,14 +149,14 @@ export class Weasel extends Phaser.GameObjects.Sprite {
         this.x += Math.sin(this.timer * 60) * 0.3;
         if (this.timer <= 0) {
           const dir = normalize(dx, dy);
-          this.vel = { x: dir.x * WEASEL.lungeSpeed, y: dir.y * WEASEL.lungeSpeed };
+          this.vel = { x: dir.x * kind.lungeSpeed, y: dir.y * kind.lungeSpeed };
           this.setState('lunge', 0.3);
         }
         break;
       case 'lunge':
         this.tryMove(this.vel.x * dt, this.vel.y * dt);
         moving = true;
-        if (dist < 11 && dog.mode === 'normal') {
+        if (dist < kind.hitRadius - 4 && dog.mode === 'normal') {
           this.events.push('bitDog');
           this.setState('recover', 0.6);
         } else if (this.timer <= 0) {
@@ -183,8 +186,7 @@ export class Weasel extends Phaser.GameObjects.Sprite {
         }
         this.stealProgress += dt;
         this.x += Math.sin(this.stealProgress * 30) * 0.2;
-        if (this.stealProgress >= WEASEL.stealTime) {
-          this.stoleEgg = true;
+        if (this.stealProgress >= kind.stealTime) {
           this.events.push('stole');
           this.startFleeing();
         }
@@ -201,7 +203,7 @@ export class Weasel extends Phaser.GameObjects.Sprite {
         if (d2 < 3) this.route.shift();
         else {
           // Fleeing ignores walls so it can never get stuck.
-          const step = Math.min(d2, WEASEL.fleeSpeed * dt);
+          const step = Math.min(d2, kind.fleeSpeed * dt);
           this.x += (dx2 / d2) * step;
           this.y += (dy2 / d2) * step;
           this.setFlipX(dx2 < 0);
@@ -213,12 +215,12 @@ export class Weasel extends Phaser.GameObjects.Sprite {
         break;
     }
 
-    if (moving && this.state !== 'windup') this.anims.play('weasel-run', true);
+    if (moving && this.state !== 'windup') this.anims.play(`${kind.name}-run`, true);
     else if (this.anims.isPlaying) this.anims.stop();
     this.setAlpha(this.invulnerable > 0 && Math.floor(this.invulnerable * 20) % 2 === 0 ? 0.5 : 1);
     this.setDepth(this.y);
     this.shadow.setPosition(this.x, this.y - 1).setDepth(this.y - 0.5);
-    this.icon.setPosition(this.x, this.y - 18).setDepth(this.y + 1);
+    this.icon.setPosition(this.x, this.y - this.tall - 2).setDepth(this.y + 1);
     this.drawPips();
   }
 
@@ -231,13 +233,13 @@ export class Weasel extends Phaser.GameObjects.Sprite {
     const gap = 1;
     const total = this.maxHp * (w + gap) - gap;
     const x0 = Math.round(this.x - total / 2);
-    const y0 = Math.round(this.y - 15);
+    const y0 = Math.round(this.y - this.tall + 1);
     for (let i = 0; i < this.maxHp; i++) {
       g.fillStyle(0x2a1a12, 1).fillRect(x0 + i * (w + gap) - 1, y0 - 1, w + 2, 4);
       g.fillStyle(i < this.hp ? 0xe25d6a : 0x6b5a5a, 1).fillRect(x0 + i * (w + gap), y0, w, 2);
     }
     if (this.state === 'steal') {
-      const pct = Math.min(1, this.stealProgress / WEASEL.stealTime);
+      const pct = Math.min(1, this.stealProgress / this.kind.stealTime);
       g.fillStyle(0x2a1a12, 1).fillRect(x0 - 1, y0 - 6, total + 2, 4);
       g.fillStyle(0xf2a93b, 1).fillRect(x0, y0 - 5, Math.round(total * pct), 2);
     }

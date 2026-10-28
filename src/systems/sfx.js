@@ -114,6 +114,30 @@ export const sfx = {
   blip() {
     tone({ freq: 880, type: 'square', duration: 0.04, volume: 0.03 });
   },
+  splash() {
+    noise({ duration: 0.3, volume: 0.07, filter: 1100 });
+    tone({ freq: 260, to: 140, type: 'sine', duration: 0.2, volume: 0.05 });
+  },
+  shake() {
+    for (let i = 0; i < 4; i++) noise({ start: i * 0.07, duration: 0.06, volume: 0.05, filter: 2600 });
+  },
+  screech() {
+    tone({ freq: 1500, to: 1100, type: 'sawtooth', duration: 0.35, volume: 0.03 });
+  },
+  howl() {
+    tone({ freq: 220, to: 440, type: 'sine', duration: 0.6, volume: 0.06 });
+    tone({ freq: 440, to: 300, type: 'sine', start: 0.6, duration: 0.9, volume: 0.05 });
+  },
+  pop() {
+    tone({ freq: 500, to: 1600, type: 'sine', duration: 0.08, volume: 0.06 });
+    [1047, 1319].forEach((f, i) => tone({ freq: f, type: 'triangle', start: 0.06 + i * 0.05, duration: 0.12, volume: 0.04 }));
+  },
+  giggle() {
+    [880, 988, 880, 1047].forEach((f, i) => tone({ freq: f, type: 'sine', start: i * 0.07, duration: 0.06, volume: 0.03 }));
+  },
+  twinkle() {
+    [1319, 1568, 2093].forEach((f, i) => tone({ freq: f, type: 'sine', start: i * 0.1, duration: 0.3, volume: 0.04 }));
+  },
   lullaby() {
     [659, 587, 523, 392, 523].forEach((f, i) => tone({ freq: f, type: 'sine', start: i * 0.28, duration: 0.5, volume: 0.06 }));
   },

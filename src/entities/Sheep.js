@@ -7,12 +7,15 @@ import { SHEEP } from '../config.js';
 import { flee, separation, cohesion, normalize, clampToRect } from '../systems/steering.js';
 
 export class Sheep extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene, x, y) {
-    super(scene, x, y, 'sheep', 'side-0');
+  // A lamb is a smaller sheep that only has side-on pictures.
+  constructor(scene, x, y, { lamb = false } = {}) {
+    super(scene, x, y, lamb ? 'lamb' : 'sheep', lamb ? 'walk1' : 'side-0');
+    this.lamb = lamb;
+    this.roam = null; // a lost lamb stays near where it got lost until it's found
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.setOrigin(0.5, 1);
-    this.shadow = scene.add.image(x, y, 'shadow');
+    this.shadow = scene.add.image(x, y, 'shadow').setScale(lamb ? 0.7 : 1);
     this.state = 'inPen';
     this.target = null;
     this.wait = Math.random() * 3;
@@ -22,7 +25,8 @@ export class Sheep extends Phaser.Physics.Arcade.Sprite {
   }
 
   setupBody() {
-    this.body.setSize(10, 6).setOffset(3, 10);
+    if (this.lamb) this.body.setSize(8, 5).setOffset(2, 7);
+    else this.body.setSize(10, 6).setOffset(3, 10);
     this.body.setCollideWorldBounds(true);
     this.body.setMass(0.6);
   }
@@ -52,6 +56,7 @@ export class Sheep extends Phaser.Physics.Arcade.Sprite {
   }
 
   wanderArea(ctx) {
+    if (this.roam) return this.roam;
     return this.state === 'grazing' ? ctx.roamRect : ctx.penRect;
   }
 
@@ -116,7 +121,16 @@ export class Sheep extends Phaser.Physics.Arcade.Sprite {
     }
 
     const speed = Math.hypot(vx, vy);
-    if (speed > 4) {
+    if (this.lamb) {
+      if (speed > 4) {
+        if (Math.abs(vx) > 1) this.setFlipX(vx < 0);
+        this.anims.play('lamb-walk', true);
+        this.anims.timeScale = speed > 40 ? 2 : 1;
+      } else {
+        this.anims.stop();
+        this.setFrame('walk1');
+      }
+    } else if (speed > 4) {
       this.dir = Math.abs(vx) > Math.abs(vy) ? 'side' : vy > 0 ? 'down' : 'up';
       if (this.dir === 'side') this.setFlipX(vx < 0);
       this.anims.play(`sheep-walk-${this.dir}`, true);

@@ -38,6 +38,7 @@ export const DOG = {
   digTime: 0.7,
   reach: 16, // how close the dog must be to pick up or talk
   stunTime: 0.7,
+  swimSpeed: 0.6, // speed in the pond, compared to on land
 };
 
 export const SHEEP = {
@@ -52,13 +53,6 @@ export const CHICKENS = {
   eggsPerDay: 3,
 };
 
-export const WEASEL = {
-  health: 4,
-  sneakSpeed: 24,
-  lungeSpeed: 150,
-  fleeSpeed: 130,
-  stealTime: 6,
-};
 
 export const CROWS = {
   total: 4, // crows that come to the crops each afternoon
@@ -69,12 +63,15 @@ export const CROWS = {
 
 export const FETCH = {
   throws: 3,
+  sticks: 2, // sticks thrown into the pond on pond day
   catchDistance: 14, // catch the ball in the air if you're this close when it lands
 };
 
 // Days are made of parts (see src/data/day.js). These are the pauses between things.
 export const DAY = {
   partPause: 1.2, // seconds between finishing a part and the next one starting
-  weaselDelay: 6, // seconds after night falls before the weasel shows up
+  firstVisitor: 6, // seconds after night falls before the first visitor shows up
+  butterflies: 5, // butterflies to catch on a butterfly break
+  hawkScares: 3, // frights it takes before the hawk gives up
   daysPerSeason: 28,
 };

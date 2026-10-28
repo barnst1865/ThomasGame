@@ -9,14 +9,20 @@ import { Dog } from '../entities/Dog.js';
 import { Sheep } from '../entities/Sheep.js';
 import { Chicken } from '../entities/Chicken.js';
 import { Farmer } from '../entities/Farmer.js';
-import { Weasel } from '../entities/Weasel.js';
-import { Item } from '../entities/Item.js';
+import { Item, BURYABLE } from '../entities/Item.js';
 import { FetchGame } from '../activities/Fetch.js';
 import { CrowRaid } from '../activities/CrowRaid.js';
 import { DinnerScene } from '../activities/Dinner.js';
+import { LostThing } from '../activities/LostThing.js';
+import { RunawayHen, LostLamb } from '../activities/Strays.js';
+import { Butterflies } from '../activities/Butterflies.js';
+import { PondDay } from '../activities/PondDay.js';
+import { HawkAttack } from '../activities/HawkAttack.js';
+import { NightWatch } from '../activities/NightWatch.js';
 import { getBreed, getCoat } from '../data/breeds.js';
 import { TASKS } from '../data/tasks.js';
-import { DAY_PARTS } from '../data/day.js';
+import { planDay } from '../data/day.js';
+import { nightTargets } from '../data/nights.js';
 import { FARMER_NAME, LINES, fill, pick } from '../data/dialogue.js';
 import { TaskBoard } from '../systems/taskBoard.js';
 import { DayPlan } from '../systems/dayPlan.js';
@@ -61,10 +67,11 @@ export class FarmScene extends Phaser.Scene {
     this.items = [];
     this.holes = new Map();
     this.mounds = new Map();
-    this.weasel = null;
-    this.weaselTimer = null;
     this.bark = null;
     this.barkTimer = 0;
+    // What today holds: the parts of the day and who visits tonight.
+    this.dayParts = planDay(save.day);
+    this.tonight = this.dayParts.find((p) => p.id === 'night').night;
 
     this.view = buildFarmView(this, this.tiles, this.date.seasonIndex);
     this.buildCollision();
@@ -89,18 +96,32 @@ export class FarmScene extends Phaser.Scene {
 
     this.controls = new Controls(this);
     this.tasks = new TaskBoard(TASKS);
-    this.plan = new DayPlan(this.tasks, DAY_PARTS, {
-      sheepOut: this.sheep.length,
-      collectEggs: CHICKENS.eggsPerDay,
-      fetch: FETCH.throws,
-      herdSheep: this.sheep.length,
-      chaseCrows: CROWS.total,
+    this.lostThing = new LostThing(this);
+    this.plan = new DayPlan(this.tasks, this.dayParts, {
+      targets: {
+        sheepOut: SHEEP.count,
+        collectEggs: CHICKENS.eggsPerDay,
+        fetch: FETCH.throws,
+        pondSticks: FETCH.sticks,
+        butterflies: DAY.butterflies,
+        herdSheep: SHEEP.count,
+        chaseCrows: CROWS.total,
+        hawk: DAY.hawkScares,
+        ...nightTargets(this.tonight),
+      },
+      titles: { lostThing: this.lostThing.title },
     });
     this.plan.begin();
     this.sky = this.plan.skyTime();
     this.fetch = new FetchGame(this);
     this.crows = new CrowRaid(this);
     this.dinner = new DinnerScene(this);
+    this.pond = new PondDay(this);
+    this.butterflies = new Butterflies(this);
+    this.hawk = new HawkAttack(this);
+    this.runawayHen = new RunawayHen(this);
+    this.lostLamb = new LostLamb(this);
+    this.night = new NightWatch(this);
 
     this.scene.launch('Hud', { farm: this });
     this.hud = this.scene.get('Hud');
@@ -117,12 +138,14 @@ export class FarmScene extends Phaser.Scene {
 
   // ------------------------------------------------------------- world
 
+  // Collision tiles: 1 = walls, trees and buildings, 2 = the pen gate,
+  // 3 = the pond (which the dog can swim in on pond day).
   buildCollision() {
-    const data = this.tiles.map((row) => row.map((t) => (isSolid(t) ? 1 : t === T.GATE ? 2 : 0)));
+    const data = this.tiles.map((row) => row.map((t) => (t === T.WATER ? 3 : isSolid(t) ? 1 : t === T.GATE ? 2 : 0)));
     const map = this.make.tilemap({ data, tileWidth: TILE, tileHeight: TILE });
     const tileset = map.addTilesetImage('collision', 'collision', TILE, TILE, 0, 0);
     this.collisionLayer = map.createLayer(0, tileset, 0, 0).setVisible(false);
-    this.collisionLayer.setCollision(1);
+    this.collisionLayer.setCollision([1, 3]);
     this.setGate(false);
   }
 
@@ -142,7 +165,7 @@ export class FarmScene extends Phaser.Scene {
     const save = this.save;
     this.dog = new Dog(this, POINTS.dogWake.x, POINTS.dogWake.y, this.breed, this.coat, save.dog.collar);
     this.dog.body.setMass(3);
-    this.physics.add.collider(this.dog, this.collisionLayer);
+    this.physics.add.collider(this.dog, this.collisionLayer, null, (dog, tile) => !(tile.index === 3 && this.pond.open));
 
     // The sheep spend the night in their pen.
     this.sheepGroup = this.physics.add.group();
@@ -182,7 +205,7 @@ export class FarmScene extends Phaser.Scene {
       const s = spots[i];
       this.spawnItem('egg', s.x * TILE + 4 + Math.random() * 8, s.y * TILE + 10 + Math.random() * 4);
     }
-    this.spawnItem('bone', POINTS.bone.x, POINTS.bone.y);
+    if (this.dayParts.some((p) => p.jobs.includes('buryBone'))) this.spawnItem('bone', POINTS.bone.x, POINTS.bone.y);
     for (const b of this.save.buried) this.addMound(b.tx, b.ty);
   }
 
@@ -252,7 +275,7 @@ export class FarmScene extends Phaser.Scene {
     const rt = this.nightLayer.setVisible(true).setAlpha(darkness);
     rt.clear();
     rt.fill(0x141a3a, 1);
-    for (const light of this.view.lights) this.eraseLight(light.x, light.y, light.size);
+    for (const light of [...this.view.lights, ...this.night.lights]) this.eraseLight(light.x, light.y, light.size);
     // A little moonlight around the dog so you can always see where you are.
     this.eraseLight(this.dog.x, this.dog.y - 6, 128);
   }
@@ -286,15 +309,25 @@ export class FarmScene extends Phaser.Scene {
   startPart(part) {
     this.hud.banner(part.name, part.intro);
     this.farmer.setActivity(part.farmer);
-    if (part.id === 'break') this.fetch.start();
-    else this.fetch.putAway();
-    if (part.id === 'afternoon') this.crows.start();
+    const has = (job) => part.jobs.includes(job);
+    if (has('fetch')) this.fetch.start('ball');
+    else if (has('pondSticks')) {
+      this.pond.start();
+      this.fetch.start('stick');
+    } else this.fetch.putAway();
+    if (has('lostThing')) this.lostThing.start();
+    if (has('runawayHen')) this.runawayHen.start();
+    if (has('butterflies')) this.butterflies.start();
+    if (has('chaseCrows')) this.crows.start();
+    if (has('hawk')) this.hawk.start();
+    if (has('lostLamb')) this.lostLamb.start();
     if (part.id === 'dinner') {
       this.crows.shoo();
+      this.hawk.stop();
       this.chickens.forEach((hen) => hen.goToBed(POINTS.coopDoor));
       this.dinner.prepare();
     }
-    if (part.id === 'night') this.weaselTimer = DAY.weaselDelay;
+    if (part.id === 'night') this.night.start(part.night);
   }
 
   checkPartDone() {
@@ -344,11 +377,15 @@ export class FarmScene extends Phaser.Scene {
     this.farmer.update(dt, dog);
     this.fetch.update(dt);
     this.crows.update(dt);
-    this.updateNight(dt);
+    for (const activity of [this.pond, this.lostThing, this.runawayHen, this.butterflies, this.hawk, this.lostLamb, this.night]) {
+      activity.update(dt);
+    }
 
     this.barkTimer -= dt;
     if (this.barkTimer <= 0) this.bark = null;
     this.checkPartDone();
+    // Once tonight's visitors are dealt with (one way or another), it's bedtime.
+    if (this.plan.part.id === 'night' && this.plan.partDone() && !this.tasks.get('goToBed')) this.bedtime();
     this.prompts = this.buildPrompts(this.findInteraction());
   }
 
@@ -394,11 +431,15 @@ export class FarmScene extends Phaser.Scene {
         this.hud.bubble(sheep, 'Baa!', 1.2, 16);
       }
     }
+    const flock = this.sheep.filter((s) => !s.lamb);
     if (this.tasks.isActive('sheepOut')) {
-      this.progressTask('sheepOut', this.sheep.filter((s) => s.state !== 'inPen').length, true);
+      this.progressTask('sheepOut', flock.filter((s) => s.state !== 'inPen').length, true);
     }
     if (this.tasks.isActive('herdSheep')) {
-      this.progressTask('herdSheep', this.sheep.filter((s) => s.state === 'penned').length, true);
+      this.progressTask('herdSheep', flock.filter((s) => s.state === 'penned').length, true);
+    }
+    if (this.tasks.isActive('lostLamb') && this.sheep.some((s) => s.lamb && s.state === 'penned')) {
+      this.progressTask('lostLamb', 1);
     }
     const allHome = part === 'afternoon' && this.sheep.every((s) => s.state === 'penned');
     if (allHome && !this.gateClosed) {
@@ -419,66 +460,37 @@ export class FarmScene extends Phaser.Scene {
 
   // ------------------------------------------------------------- night
 
-  updateNight(dt) {
-    if (this.weaselTimer !== null) {
-      this.weaselTimer -= dt;
-      if (this.weaselTimer <= 0) {
-        this.weaselTimer = null;
-        this.spawnWeasel();
-      }
-    }
-    this.updateWeasel(dt);
+  // The raccoon got to the basket.
+  emptyBasket() {
+    this.eggsInBasket = 0;
+    this.view.basket.setTexture('basket-0');
   }
 
-  spawnWeasel() {
-    const path = [POINTS.weaselEntry, POINTS.weaselTurn, POINTS.coopDoor];
-    const exit = [POINTS.weaselTurn, POINTS.weaselEntry, { x: POINTS.weaselEntry.x + 40, y: POINTS.weaselEntry.y }];
-    this.weasel = new Weasel(this, path, exit);
-    sfx.hiss();
-    this.hud.toast('Something is sneaking toward the coop!', 'warn');
+  // A coyote or wolf reached the pen: the sheep panic (they'll be fine).
+  frightenSheep(from) {
+    for (const sheep of this.sheep) {
+      const away = Math.atan2(sheep.y - from.y, sheep.x - from.x);
+      sheep.panic = 1.4;
+      sheep.panicDir = { x: Math.cos(away), y: Math.sin(away) };
+    }
+    sfx.baa();
+    if (this.sheep[0]) this.hud.bubble(this.sheep[0], 'BAA!', 1.4, 16);
   }
 
-  updateWeasel(dt) {
-    const weasel = this.weasel;
-    if (!weasel) return;
-    const dog = this.dog;
-    weasel.update(dt, { dog, coopDoor: POINTS.coopDoor });
-
-    if (dog.mode === 'pounce' && !dog.pounceHits.has(weasel) && distance(dog.feet, weasel.feet) < 15) {
-      dog.pounceHits.add(weasel);
-      if (weasel.hit(DOG.pounceDamage * this.breed.stats.pounceDamage, dog.x, dog.y)) {
-        sfx.hit();
-        this.cameras.main.shake(90, 0.004);
-      }
+  // Things the HUD points at when they're off screen.
+  pointers() {
+    const list = [];
+    for (const p of this.night.prowlers) if (p.state !== 'flee') list.push({ x: p.x, y: p.y - 8, color: 0xe25d6a });
+    for (const w of this.night.wisps) if (!w.popped) list.push({ x: w.x, y: w.y, color: 0x8fe36b });
+    const hawk = this.hawk.pointer;
+    if (hawk) list.push({ x: hawk.x, y: hawk.y, color: 0xe25d6a });
+    for (const stray of [this.runawayHen.pointer, this.lostLamb.pointer]) {
+      if (stray) list.push({ x: stray.x, y: stray.y - 8, color: 0xf2c84b });
     }
-
-    for (const event of weasel.events.splice(0)) {
-      if (event === 'noticed') {
-        sfx.hiss();
-        this.hud.bubble(weasel, 'Hssss!', 1.2, 16);
-      } else if (event === 'bitDog') {
-        dog.stun(weasel.x, weasel.y);
-        sfx.yelp();
-        this.hud.bubble(dog, 'Yip!', 0.9, 18);
-        this.hintOnce('lunge', 'Watch out for the lunge! Back away when you see the "!", then pounce.');
-      } else if (event === 'defeated') {
-        this.save.stats.weaselsChased += 1;
-        this.progressTask('guardCoop', 1);
-        this.bedtime();
-      } else if (event === 'stole') {
-        this.tasks.fail('guardCoop');
-        sfx.sad();
-        this.hud.toast('Oh no! The weasel snuck off with an egg. Better luck tomorrow night.', 'warn');
-        this.bedtime();
-      }
-    }
-    if (weasel.done) {
-      weasel.destroy();
-      this.weasel = null;
-    }
+    return list;
   }
 
-  // The night job is over one way or another: now the dog can go to bed.
+  // Tonight's visitors are dealt with: now the dog can go to bed.
   bedtime() {
     this.tasks.add('goToBed', 1, 'night');
     this.time.delayedCall(1200, () => this.hud.toast(LINES.bedtimeNow));
@@ -490,7 +502,7 @@ export class FarmScene extends Phaser.Scene {
     const dog = this.dog;
     if (dog.barkCooldown > 0 || dog.mode !== 'normal') return;
     dog.barkCooldown = DOG.barkCooldown;
-    const radius = DOG.barkRadius * this.breed.stats.barkRadius;
+    const radius = DOG.barkRadius * this.breed.stats.barkRadius * this.night.barkBoost;
     this.bark = { x: dog.x, y: dog.y - 3, radius };
     this.barkTimer = 0.15;
     sfx.bark(this.breed.barkPitch ?? 1);
@@ -499,9 +511,8 @@ export class FarmScene extends Phaser.Scene {
     const ring = this.add.circle(dog.x, dog.y - 6, 8).setStrokeStyle(1, 0xffffff, 0.9).setDepth(8999);
     this.tweens.add({ targets: ring, scale: radius / 8, alpha: 0, duration: 420, onComplete: () => ring.destroy() });
 
-    if (this.weasel && distance(dog.feet, this.weasel.feet) < radius && this.weasel.startle()) {
-      this.hud.bubble(this.weasel, '?!', 1, 16);
-    }
+    this.night.hearBark(this.bark);
+    this.hawk.hearBark(this.bark);
     this.crows.hearBark(this.bark);
     let clucked = false;
     for (const hen of this.chickens) {
@@ -526,22 +537,23 @@ export class FarmScene extends Phaser.Scene {
     if (dog.mode !== 'normal') return;
     const { tx, ty } = this.digTarget();
     const key = `${tx},${ty}`;
+    if (dog.swimming) {
+      this.hud.bubble(dog, 'Blub blub!', 0.8, 18);
+      return;
+    }
     if (!this.canDigAt(tx, ty)) {
       this.hud.bubble(dog, '?', 0.8, 18);
       this.hintOnce('hard', 'The ground is too hard here. Try digging in the grass.');
       return;
     }
-    if (dog.carrying?.kind === 'egg') {
+    const carried = dog.carrying;
+    if (carried && !BURYABLE.has(carried.kind)) {
       this.hud.bubble(dog, '...', 1, 18);
-      this.hintOnce('egg', 'Eggs go in the basket, not in the ground!');
+      if (carried.kind === 'egg') this.hintOnce('egg', 'Eggs go in the basket, not in the ground!');
+      else this.hintOnce(`keep-${carried.kind}`, `${FARMER_NAME} wants that ${carried.label} back! Bring it to her.`);
       return;
     }
-    if (dog.carrying?.kind === 'ball') {
-      this.hud.bubble(dog, '...', 1, 18);
-      this.hintOnce('ball', `${FARMER_NAME} wants to throw the ball again! Bring it back to her.`);
-      return;
-    }
-    const buried = this.save.buried.some((b) => b.tx === tx && b.ty === ty);
+    const buried = this.save.buried.some((b) => b.tx === tx && b.ty === ty) || this.lostThing.digFinds(tx, ty);
     if (this.holes.has(key) && !buried && !dog.carrying) {
       this.hintOnce('dug', 'There is already a hole here. Nothing inside!');
       return;
@@ -554,6 +566,10 @@ export class FarmScene extends Phaser.Scene {
   finishDig(tx, ty) {
     const dog = this.dog;
     const key = `${tx},${ty}`;
+    if (!dog.carrying && this.lostThing.digFinds(tx, ty)) {
+      this.lostThing.found(tx, ty);
+      return;
+    }
     const found = this.save.buried.findIndex((b) => b.tx === tx && b.ty === ty);
     if (found >= 0) {
       const [thing] = this.save.buried.splice(found, 1);
@@ -610,8 +626,11 @@ export class FarmScene extends Phaser.Scene {
     const farmerNear = this.farmer.available && distance(this.farmer.feet, p) < 26;
     const carried = dog.carrying;
     if (carried) {
-      if (carried.kind === 'ball' && farmerNear && this.fetch.owns(carried)) {
+      if (farmerNear && this.fetch.owns(carried)) {
         return { label: this.fetch.giveLabel, action: () => this.fetch.returnBall() };
+      }
+      if (farmerNear && this.lostThing.owns(carried)) {
+        return { label: this.lostThing.giveLabel, action: () => this.lostThing.giveBack() };
       }
       if (carried.kind === 'egg') {
         if (farmerNear) return { label: `Give the egg to ${FARMER_NAME}`, action: () => this.deliverEgg(true) };
@@ -633,6 +652,8 @@ export class FarmScene extends Phaser.Scene {
     if (best) return { label: `Pick up the ${best.label}`, action: () => this.pickUp(best) };
     const atDinner = this.dinner.ready && (farmerNear || distance(POINTS.bowl, p) < 28);
     if (atDinner) return { label: 'Sit down for dinner', action: () => this.dinner.start() };
+    const special = this.pond.interaction(farmerNear) ?? this.night.interaction(p);
+    if (special) return special;
     if (farmerNear) return { label: `Talk to ${FARMER_NAME}`, action: () => this.talkToFarmer() };
     if (distance(POINTS.dogBed, p) < 20) {
       return { label: this.tasks.isActive('goToBed') ? 'Go to sleep' : 'Lie down in your bed', action: () => this.trySleep() };
@@ -651,11 +672,12 @@ export class FarmScene extends Phaser.Scene {
   }
 
   pickUp(item) {
+    this.tweens.killTweensOf(item); // a stick stops bobbing on the water
     this.dog.carry(item);
     sfx.pickup();
     if (item.kind === 'bone') this.hintOnce('bone', `Find a nice patch of grass and ${howTo('dig')} to bury your bone.`);
     if (item.kind === 'egg') this.hintOnce('egg-carry', 'Bring the egg to the basket on the porch.');
-    if (item.kind === 'ball') this.hintOnce('ball-carry', `Bring the ball back to ${FARMER_NAME}.`);
+    if (item.kind === 'ball' || item.kind === 'stick') this.hintOnce(`${item.kind}-carry`, `Bring the ${item.kind} back to ${FARMER_NAME}.`);
   }
 
   dropItem() {

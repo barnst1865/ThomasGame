@@ -1,6 +1,6 @@
 // Farmer Hazel. The farm scene tells her what she's doing (see `farmer` in
 // src/data/day.js) and she walks there: the field, the yard for fetch, the
-// porch, dinner on the porch, or inside for the night.
+// pond, the porch, dinner on the porch, or inside for the night.
 
 import { TILE } from '../config.js';
 import { AREAS, POINTS } from '../world/farmMap.js';
@@ -20,6 +20,7 @@ function randomFieldSpot() {
 const DESTINATIONS = {
   field: () => randomFieldSpot(),
   yard: () => POINTS.fetchSpot,
+  pond: () => POINTS.pondSpot,
   porch: () => POINTS.farmerPorch,
   dinner: () => POINTS.dinnerFarmer,
   inside: () => POINTS.houseDoor,
@@ -120,7 +121,7 @@ export class Farmer extends Phaser.GameObjects.Sprite {
     } else {
       // Standing still: watch the dog when it's close, otherwise get on with work.
       const dogDist = Math.hypot(dog.x - this.x, dog.y - this.y);
-      if (dogDist < 56 || this.activity === 'yard') this.faceToward(dog);
+      if (dogDist < 56 || this.activity === 'yard' || this.activity === 'pond') this.faceToward(dog);
       else this.face(this.activity === 'field' ? 'up' : 'down');
       if (this.activity === 'field') {
         this.wait -= dt;

@@ -7,6 +7,7 @@ import { forEachPixel, flipX, spriteSize } from '../src/art/pixelArt.js';
 const SCALE = Number(new URLSearchParams(location.search).get('scale')) || 5;
 const out = document.getElementById('out');
 const extra = await import('../src/art/sprites.js').catch((e) => { console.error(e); return null; });
+const creatures = await import('../src/art/creatures.js').catch((e) => { console.error(e); return null; });
 
 function draw(rows, colors, label, parent) {
   const { width, height } = spriteSize(rows);
@@ -49,5 +50,11 @@ if (extra?.PREVIEW) {
   row.className = 'row';
   out.append(row);
   for (const [name, rows, colors] of extra.PREVIEW()) draw(rows, colors, name, row);
+}
+if (creatures?.PREVIEW_CREATURES) {
+  const row = document.createElement('div');
+  row.className = 'row';
+  out.append(row);
+  for (const [name, rows, colors] of creatures.PREVIEW_CREATURES()) draw(rows, colors, name, row);
 }
 document.body.dataset.ready = '1';

@@ -44,7 +44,8 @@ export const AREAS = {
   trough: rect(4, 21, 2, 1),
   meadow: rect(17, 21, 17, 9),
   pasture: rect(14, 18, 22, 12), // where loose sheep like to wander
-  fetchField: rect(11, 10, 12, 5), // where Farmer Hazel throws the ball
+  fetchField: rect(11, 10, 12, 5), // where Farmer Hazel throws the ball (and butterflies flutter)
+  lostThings: rect(5, 10, 26, 9), // where Farmer Hazel's lost things turn up
   southGate: rect(22, 32, 3, 1),
 };
 
@@ -57,8 +58,7 @@ export const POINTS = {
   farmerPorch: { x: px(11) + 8, y: px(9) },
   basket: { x: px(13) + 4, y: px(8) + 10 },
   coopDoor: { x: px(39), y: px(14) + 4 },
-  weaselEntry: { x: px(MAP_W) - 4, y: px(16) + 8 },
-  weaselTurn: { x: px(39), y: px(16) + 8 },
+  coopPath: { x: px(39), y: px(16) + 8 },
   sign: { x: px(21) + 8, y: px(31) + 8 },
   mailbox: { x: px(8) + 8, y: px(15) + 12 },
   scarecrow: { x: px(23), y: px(7) + 10 },
@@ -66,6 +66,30 @@ export const POINTS = {
   dinnerFarmer: { x: px(10) + 2, y: px(8) + 12 },
   bowl: { x: px(8) + 6, y: px(8) + 13 },
   meadowGate: { x: px(17), y: px(24) + 8 }, // where sheep head when let out
+  pondSpot: { x: px(34) + 8, y: px(11) + 8 }, // where Farmer Hazel stands on pond day
+  // Night visitors come in along the woods trail, then head for their target.
+  trailEnd: { x: px(MAP_W) - 4, y: px(16) + 8 },
+  porchPath: { x: px(10) + 8, y: px(16) + 8 },
+  porchStep: { x: px(10) + 8, y: px(9) + 6 },
+  basketSteal: { x: px(13) + 4, y: px(9) + 4 },
+  meadowPath: { x: px(16) + 8, y: px(16) + 8 },
+  penGateOutside: { x: px(15) + 8, y: px(24) + 8 },
+};
+
+// Where a runaway hen or a lost lamb might turn up (in pixels).
+export const STRAY_SPOTS = {
+  hen: [
+    { x: px(26), y: px(12) + 8 },
+    { x: px(20) + 8, y: px(18) + 8 },
+    { x: px(29), y: px(25) },
+    { x: px(43), y: px(29) },
+  ],
+  lamb: [
+    { x: px(41), y: px(25) },
+    { x: px(30), y: px(12) + 8 },
+    { x: px(44), y: px(21) },
+    { x: px(37), y: px(30) },
+  ],
 };
 
 export function areaPx(area) {

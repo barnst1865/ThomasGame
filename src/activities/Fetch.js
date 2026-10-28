@@ -1,12 +1,28 @@
-// The fun break: Farmer Hazel throws the ball, the dog brings it back.
-// Catching it right as it lands earns a bonus treat.
+// Fetch with Farmer Hazel: she throws, the dog brings it back. On a fun
+// break it's a ball in the yard; on pond day it's a stick into the pond.
+// Catching the ball right as it lands earns a bonus treat.
 
 import { FETCH, TILE } from '../config.js';
-import { AREAS, openTilesIn } from '../world/farmMap.js';
+import { AREAS, T, openTilesIn, tileAt } from '../world/farmMap.js';
 import { FARMER_NAME, LINES, fill, pick } from '../data/dialogue.js';
 import { sfx } from '../systems/sfx.js';
 
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+// Water tiles with water all around, so the stick lands well out in the pond.
+function pondSpots(tiles) {
+  const water = (x, y) => tileAt(tiles, x, y) === T.WATER;
+  const spots = [];
+  const { pond } = AREAS;
+  for (let y = pond.y; y < pond.y + pond.h; y++) {
+    for (let x = pond.x; x < pond.x + pond.w; x++) {
+      if (water(x, y) && water(x + 1, y) && water(x - 1, y) && water(x, y + 1) && water(x, y - 1)) {
+        spots.push({ x: x * TILE + 8, y: y * TILE + 10 });
+      }
+    }
+  }
+  return spots;
+}
 
 export class FetchGame {
   constructor(scene) {
@@ -15,10 +31,27 @@ export class FetchGame {
     this.ball = null;
     this.wait = 0;
     this.catches = 0;
-    this.spots = openTilesIn(scene.tiles, AREAS.fetchField).map((t) => ({ x: t.x * TILE + 8, y: t.y * TILE + 10 }));
+    this.modes = {
+      ball: {
+        kind: 'ball',
+        job: 'fetch',
+        spots: openTilesIn(scene.tiles, AREAS.fetchField).map((t) => ({ x: t.x * TILE + 8, y: t.y * TILE + 10 })),
+        range: [56, 140],
+        lines: { start: LINES.fetchStart, thanks: LINES.fetchThanks, done: LINES.fetchDone },
+      },
+      stick: {
+        kind: 'stick',
+        job: 'pondSticks',
+        spots: pondSpots(scene.tiles),
+        range: [36, 120],
+        lines: { start: LINES.pondStart, thanks: LINES.pondThanks, done: LINES.pondDone },
+      },
+    };
+    this.mode = this.modes.ball;
   }
 
-  start() {
+  start(mode = 'ball') {
+    this.mode = this.modes[mode];
     this.active = true;
     this.announced = false;
   }
@@ -42,7 +75,7 @@ export class FetchGame {
     if (!farmer.arrived) return; // still walking out to the yard
     if (!this.announced) {
       this.announced = true;
-      hud.bubble(farmer, LINES.fetchStart, 2.2, 26);
+      hud.bubble(farmer, this.mode.lines.start, 2.2, 26);
       this.wait = 1.6;
       return;
     }
@@ -54,15 +87,16 @@ export class FetchGame {
   throwBall() {
     const { scene } = this;
     const farmer = scene.farmer;
-    const choices = this.spots.filter((s) => {
+    const { spots, range } = this.mode;
+    const choices = spots.filter((s) => {
       const d = distance(s, farmer);
-      return d > 56 && d < 140;
+      return d > range[0] && d < range[1];
     });
-    const target = Phaser.Utils.Array.GetRandom(choices.length ? choices : this.spots);
+    const target = Phaser.Utils.Array.GetRandom(choices.length ? choices : spots);
     farmer.throwToward(target);
     sfx.throw();
 
-    const ball = scene.spawnItem('ball', farmer.x, farmer.y - 14);
+    const ball = scene.spawnItem(this.mode.kind, farmer.x, farmer.y - 14);
     ball.inFlight = true;
     this.ball = ball;
     const shadow = scene.add.image(farmer.x, farmer.y, 'shadow').setScale(0.6);
@@ -99,6 +133,10 @@ export class FetchGame {
       scene.giveTreats(1);
       sfx.chime();
       scene.hud.bubble(scene.farmer, pick(LINES.fetchCatch), 1.8, 26);
+    } else if (scene.pond.isWater(ball.x, ball.y - 2)) {
+      // It floats, bobbing gently.
+      scene.pond.splash(ball.x, ball.y - 2);
+      scene.tweens.add({ targets: ball, y: ball.y - 1, yoyo: true, repeat: -1, duration: 500 });
     } else {
       scene.tweens.add({ targets: ball, y: ball.y - 4, yoyo: true, duration: 120 });
       sfx.drop();
@@ -113,17 +151,18 @@ export class FetchGame {
     scene.removeItem(ball);
     this.ball = null;
     sfx.pickup();
-    scene.progressTask('fetch', 1);
-    if (scene.tasks.get('fetch').status === 'done') {
+    const { job, lines } = this.mode;
+    scene.progressTask(job, 1);
+    if (scene.tasks.get(job).status === 'done') {
       this.active = false;
-      scene.hud.bubble(scene.farmer, fill(LINES.fetchDone, scene.save.dog.name), 2.6, 26);
+      scene.hud.bubble(scene.farmer, fill(lines.done, scene.save.dog.name), 2.6, 26);
     } else {
-      scene.hud.bubble(scene.farmer, pick(LINES.fetchThanks), 1.4, 26);
+      scene.hud.bubble(scene.farmer, pick(lines.thanks), 1.4, 26);
       this.wait = 0.9;
     }
   }
 
   get giveLabel() {
-    return `Give the ball to ${FARMER_NAME}`;
+    return `Give the ${this.mode.kind} to ${FARMER_NAME}`;
   }
 }

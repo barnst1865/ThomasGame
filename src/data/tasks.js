@@ -31,9 +31,53 @@ export const TASKS = {
     title: 'Have dinner on the porch',
     reward: { treats: 0, friendship: 5 },
   },
-  guardCoop: {
+  guardWeasel: {
     title: 'Keep the weasel away',
     reward: { treats: 6, friendship: 5 },
+  },
+  guardRaccoon: {
+    title: 'Chase the raccoon away',
+    reward: { treats: 6, friendship: 5 },
+  },
+  guardCoyote: {
+    title: 'Keep the coyote away from the sheep',
+    reward: { treats: 8, friendship: 6 },
+  },
+  guardWolf: {
+    title: 'Stand up to the wolf',
+    reward: { treats: 12, friendship: 8 },
+  },
+  popWisps: {
+    title: 'Pop the mischief wisps',
+    reward: { treats: 6, friendship: 4 },
+  },
+  lostThing: {
+    title: "Find Farmer Hazel's lost thing",
+    reward: { treats: 4, friendship: 4 },
+  },
+  runawayHen: {
+    title: 'Bring the runaway hen home',
+    reward: { treats: 3, friendship: 3 },
+  },
+  butterflies: {
+    title: 'Catch butterflies',
+    reward: { treats: 3, friendship: 3 },
+  },
+  pondSticks: {
+    title: 'Fetch the sticks from the pond',
+    reward: { treats: 2, friendship: 2 },
+  },
+  shakeOff: {
+    title: 'Shake off next to Farmer Hazel',
+    reward: { treats: 1, friendship: 2 },
+  },
+  hawk: {
+    title: 'Scare the hawk away from the hens',
+    reward: { treats: 5, friendship: 4 },
+  },
+  lostLamb: {
+    title: 'Find the lost lamb and pen it with the sheep',
+    reward: { treats: 4, friendship: 4 },
   },
   goToBed: {
     title: 'Go to bed',

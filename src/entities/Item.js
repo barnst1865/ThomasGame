@@ -1,10 +1,18 @@
-// Something on the ground the dog can pick up and carry (eggs, bones).
+// Something on the ground the dog can pick up and carry (eggs, bones,
+// Farmer Hazel's lost things).
 
 export const ITEM_NAMES = {
   egg: 'egg',
   bone: 'bone',
   ball: 'ball',
+  stick: 'stick',
+  hat: 'hat',
+  glove: 'glove',
+  key: 'key',
 };
+
+// Only the dog's own things go in the ground.
+export const BURYABLE = new Set(['bone']);
 
 export class Item extends Phaser.GameObjects.Image {
   constructor(scene, x, y, kind) {

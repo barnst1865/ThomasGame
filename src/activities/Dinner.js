@@ -55,10 +55,21 @@ export class DinnerScene {
     const name = scene.save.dog.name;
     const done = (id) => scene.tasks.get(id)?.status === 'done';
     const lines = [LINES.dinnerStart];
+    if (done('lostThing')) lines.push(LINES.dinnerLost.replace('{thing}', scene.lostThing.kind));
+    if (done('runawayHen')) lines.push(LINES.dinnerHen);
     if (done('herdSheep')) lines.push(LINES.dinnerSheep);
+    if (done('lostLamb')) lines.push(LINES.dinnerLamb);
     if (done('chaseCrows')) lines.push(LINES.dinnerCrows);
+    if (done('hawk')) lines.push(LINES.dinnerHawk);
     if (done('fetch')) lines.push(LINES.dinnerFetch);
     if (scene.fetch.catches > 0) lines.push(LINES.dinnerCatch);
+    if (done('butterflies')) lines.push(LINES.dinnerButterflies);
+    if (done('pondSticks')) lines.push(LINES.dinnerPond);
+    // Before the first wisps come, she has noticed something odd.
+    if (scene.tonight.wisps > 0 && !scene.save.flags.sawLights) {
+      scene.save.flags.sawLights = true;
+      lines.push(LINES.dinnerLights);
+    }
     lines.push(LINES.dinnerServe);
     scene.hud.dialogue(
       FARMER_NAME,
@@ -91,9 +102,11 @@ export class DinnerScene {
   finish() {
     const { scene } = this;
     const name = scene.save.dog.name;
+    const night = scene.tonight;
+    const warning = LINES.dinnerNight[night.threats[0] ?? 'wisps'];
     scene.hud.dialogue(
       FARMER_NAME,
-      [{ speaker: null, text: fill(LINES.dinnerEat, name) }, fill(LINES.dinnerEnd, name)],
+      [{ speaker: null, text: fill(LINES.dinnerEat, name) }, fill(`${LINES.dinnerEnd} ${warning}`, name)],
       () => {
         scene.hud.letterbox(false);
         scene.cutscene = false;

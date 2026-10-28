@@ -36,6 +36,29 @@ import {
   MOON,
 } from './sprites.js';
 import {
+  RACCOON,
+  RACCOON_COLORS,
+  COYOTE,
+  COYOTE_COLORS,
+  WOLF,
+  WOLF_COLORS,
+  HAWK,
+  HAWK_COLORS,
+  LAMB,
+  LAMB_COLORS,
+  BUTTERFLY,
+  BUTTERFLY_COLORS,
+  WISP,
+  WISP_COLORS,
+  STICK,
+  HAT,
+  GLOVE,
+  KEY,
+  RIPPLE,
+  SPARKLE,
+  SCENT,
+} from './creatures.js';
+import {
   drawGround,
   drawTree,
   drawHouse,
@@ -152,6 +175,13 @@ export function buildBaseTextures(scene) {
     sunrise: SUNRISE,
     sunset: SUNSET,
     moon: MOON,
+    stick: STICK,
+    hat: HAT,
+    glove: GLOVE,
+    key: KEY,
+    ripple: RIPPLE,
+    sparkle: SPARKLE,
+    scent: SCENT,
   };
   for (const [key, item] of Object.entries(items)) pixelTexture(scene, key, item.rows, item.colors);
   for (let n = 0; n <= 5; n++) {
@@ -184,6 +214,31 @@ export function buildBaseTextures(scene) {
   sheetTexture(scene, 'weasel', Object.entries(WEASEL).map(([pose, rows]) => [pose, rows, WEASEL_COLORS]), 16, 16);
   anim(scene, 'weasel-run', 'weasel', ['walk1', 'walk2'], 10);
 
+  // Night prowlers: each has walk1, walk2 and crouch frames.
+  const prowlers = { raccoon: [RACCOON, RACCOON_COLORS, 16, 16], coyote: [COYOTE, COYOTE_COLORS, 20, 16], wolf: [WOLF, WOLF_COLORS, 24, 18] };
+  for (const [name, [frames, colors, w, h]] of Object.entries(prowlers)) {
+    sheetTexture(scene, name, Object.entries(frames).map(([pose, rows]) => [pose, rows, colors]), w, h);
+    anim(scene, `${name}-run`, name, ['walk1', 'walk2'], name === 'wolf' ? 8 : 10);
+  }
+
+  sheetTexture(scene, 'hawk', Object.entries(HAWK).map(([pose, rows]) => [pose, rows, HAWK_COLORS]), 16, 15);
+  anim(scene, 'hawk-flap', 'hawk', ['glide', 'flap'], 6);
+
+  sheetTexture(scene, 'lamb', Object.entries(LAMB).map(([pose, rows]) => [pose, rows, LAMB_COLORS]), 12, 12);
+  anim(scene, 'lamb-walk', 'lamb', ['walk1', 'walk2'], 6);
+
+  BUTTERFLY_COLORS.forEach(([a, A], i) => {
+    const key = `butterfly-${i}`;
+    sheetTexture(scene, key, Object.entries(BUTTERFLY).map(([pose, rows]) => [pose, rows, { a, A, o: '#2b2024', b: '#4a3326' }]), 11, 9);
+    anim(scene, `${key}-flap`, key, ['open', 'closed'], 10);
+  });
+
+  for (const [kind, colors] of Object.entries(WISP_COLORS)) {
+    const key = `wisp-${kind}`;
+    sheetTexture(scene, key, Object.entries(WISP).map(([pose, rows]) => [pose, rows, colors]), 9, 10);
+    anim(scene, `${key}-float`, key, ['a', 'b'], 4);
+  }
+
   sheetTexture(scene, 'crow', Object.entries(CROW).map(([pose, rows]) => [pose, rows, CROW_COLORS]), 16, 16);
   anim(scene, 'crow-fly', 'crow', ['fly1', 'fly2'], 8);
   anim(scene, 'crow-peck', 'crow', ['perch', 'peck', 'perch', 'peck'], 5, 0);
@@ -199,10 +254,10 @@ export function buildBaseTextures(scene) {
   canvasTexture(scene, 'gate-closed', 16, 48, (canvas) => drawGate(canvas, false));
   canvasTexture(scene, 'gate-open', 44, 16, (canvas) => drawGate(canvas, true));
   // Lights are drawn into the night layer at quarter size (see FarmScene.updateNight).
-  for (const size of [16, 32]) canvasTexture(scene, `glow-${size}`, size, size, (canvas) => drawGlow(canvas));
+  for (const size of [8, 16, 32, 48]) canvasTexture(scene, `glow-${size}`, size, size, (canvas) => drawGlow(canvas));
 
   // Tiny helpers: a blank tileset for collisions, a pixel for particles, a shadow.
-  canvasTexture(scene, 'collision', TILE * 3, TILE, () => {});
+  canvasTexture(scene, 'collision', TILE * 4, TILE, () => {});
   canvasTexture(scene, 'pixel', 2, 2, (canvas, ctx) => {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, 2, 2);

@@ -89,12 +89,13 @@ export class HudScene extends Phaser.Scene {
     this.statsBox.rect = { x, y: 12, w: 196, h: 66 };
   }
 
-  // Panels fade out when the dog or the weasel walks behind them.
+  // Panels fade out when the dog (or trouble) is behind them.
   fadePanels() {
     const cam = this.farm.cameras.main;
-    const spots = [this.farm.dog, this.farm.weasel]
-      .filter(Boolean)
-      .map((o) => ({ x: (o.x - cam.worldView.x) * cam.zoom, y: (o.y - 10 - cam.worldView.y) * cam.zoom }));
+    const spots = [this.farm.dog, ...this.farm.pointers()].map((o) => ({
+      x: (o.x - cam.worldView.x) * cam.zoom,
+      y: (o.y - 10 - cam.worldView.y) * cam.zoom,
+    }));
     for (const box of [this.dayBox, this.statsBox, this.taskBox]) {
       const r = box.rect;
       if (!r) continue;
@@ -268,15 +269,21 @@ export class HudScene extends Phaser.Scene {
 
   // ---------------------------------------------------- off-screen arrow
 
+  // Arrows at the screen edge point toward trouble that's off screen.
   updateArrow() {
     const g = this.arrow.clear();
-    const weasel = this.farm.weasel;
-    if (!weasel || weasel.state === 'flee' || this.modal) return;
+    if (this.modal) return;
     const cam = this.farm.cameras.main;
-    const sx = (weasel.x - cam.worldView.x) * cam.zoom;
-    const sy = (weasel.y - 8 - cam.worldView.y) * cam.zoom;
+    for (const target of this.farm.pointers().slice(0, 3)) {
+      const sx = (target.x - cam.worldView.x) * cam.zoom;
+      const sy = (target.y - cam.worldView.y) * cam.zoom;
+      if (sx > 0 && sx < W && sy > 0 && sy < H) continue;
+      this.drawArrow(g, sx, sy, target.color);
+    }
+  }
+
+  drawArrow(g, sx, sy, color) {
     const margin = 40;
-    if (sx > 0 && sx < W && sy > 0 && sy < H) return;
     const cx = W / 2;
     const cy = H / 2;
     const angle = Math.atan2(sy - cy, sx - cx);
@@ -289,7 +296,7 @@ export class HudScene extends Phaser.Scene {
     const l = p(14, 2.4);
     const r = p(14, -2.4);
     g.fillStyle(UI.ink, 1).fillCircle(ax, ay, 18 * pulse);
-    g.fillStyle(0xe25d6a, 1).fillTriangle(tip.x, tip.y, l.x, l.y, r.x, r.y);
+    g.fillStyle(color, 1).fillTriangle(tip.x, tip.y, l.x, l.y, r.x, r.y);
   }
 
   // ------------------------------------------------------------ dialogue

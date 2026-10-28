@@ -34,9 +34,9 @@ test('labels show progress for multi-step tasks', () => {
 
 test('failed tasks stop counting', () => {
   const board = new TaskBoard(TASKS);
-  board.add('guardCoop');
-  board.fail('guardCoop');
-  assert.equal(board.advance('guardCoop'), null);
+  board.add('guardWeasel');
+  board.fail('guardWeasel');
+  assert.equal(board.advance('guardWeasel'), null);
   assert.equal(board.remaining().length, 0);
 });
 
