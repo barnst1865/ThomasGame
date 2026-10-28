@@ -61,7 +61,7 @@ its jobs are done, and the sky moves on as you work.
 |---|---|---|
 | Morning | Herd the sheep out to the meadow, bring the eggs to the basket | Hide your bone; find Farmer Hazel's lost hat, glove or key (sniff, dig, return it); bring a runaway hen home |
 | Fun break | | Fetch (catch it in the air for a bonus); catch butterflies; pond day (swim for sticks, then shake off next to Farmer Hazel) |
-| Afternoon | Herd the sheep back into the pen | Chase the crows off the crops; scare a hawk away from the hens; pen a lost lamb from next door |
+| Afternoon | Herd the sheep back into the pen | Chase the crows off the crops; scare a hawk away from the hens; pen a lost lamb from next door; find the dinner bowl Pickles the cat hid (follow her paw prints) |
 | Dinner | Dinner on the porch with Farmer Hazel at sunset | |
 | Night | Deal with tonight's visitors, then go to bed | |
 
@@ -119,9 +119,10 @@ missed but nobody is hurt.
 ## Story plan
 
 1. Visitors and rewards (built: mail, shop, toy box).
-2. Farm friends: Pickles the cat hides your dinner bowl; Sir Cluckington
-   the rooster hands out mischief jobs (washing line, Farmer Hazel's hat,
-   muddy paw prints).
+2. Farm friends (built): Pickles the cat hides your dinner bowl up a tree
+   or underground; Sir Cluckington the rooster hands out optional mischief
+   (washing line, Farmer Hazel's hat, muddy paw prints) worth feathers,
+   and three feathers make a Feather Cap.
 3. Duke, the show dog from next door, arrives on day 3. Four contests on
    days 5, 8, 11 and 14 (fetch race, egg hunt, treasure dig-off, herding
    trial). Duke becomes a friend win or lose.

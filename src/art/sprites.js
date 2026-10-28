@@ -248,6 +248,11 @@ function person({ head = FARMER_HAT, sideHead = FARMER_SIDE_HAT, backHead = head
 
 export const FARMER = person();
 
+// Farmer Hazel without her hat (a certain rooster's idea).
+const HAIR = ['................', '................', '................', '.....oooooo.....', '....oaaaaaao....', '...oaaaaaaaao...', '...oaaaaaaaao...', '...oaaaaaaaao...'];
+const HAIR_SIDE = ['................', '................', '................', '.....oooooo.....', '....oaaaaaao....', '...oaaaaaaaao...', '...oaaaaaaaao...', '....oooaaassoo..'];
+export const FARMER_NOHAT = person({ head: HAIR, backHead: HAIR, sideHead: HAIR_SIDE });
+
 // ---------------------------------------------------------- mail carrier
 // A cap with a badge, and a mail bag on a strap.
 const CAP = ['................', '................', '................', '.....oooooo.....', '....oHHHHHHo....', '....oHHrrHHo....', '...ohhhhhhhho...'];
@@ -636,6 +641,7 @@ export function PREVIEW() {
     list.push([`hen ${pose}`, flipX(rows), CHICKEN_COLORS.brown]);
   }
   for (const [name, rows] of Object.entries(FARMER)) list.push([`farmer ${name}`, rows, FARMER_COLORS]);
+  for (const [name, rows] of Object.entries(FARMER_NOHAT)) list.push([`no hat ${name}`, rows, FARMER_COLORS]);
   for (const [name, rows] of Object.entries(MAIL_CARRIER)) list.push([`mail ${name}`, rows, MAIL_CARRIER_COLORS]);
   for (const [name, rows] of Object.entries(SHOPKEEPER)) list.push([`shop ${name}`, rows, SHOPKEEPER_COLORS]);
   for (const [pose, rows] of Object.entries(WEASEL)) list.push([`weasel ${pose}`, rows, WEASEL_COLORS]);

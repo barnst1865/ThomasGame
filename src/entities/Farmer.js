@@ -64,6 +64,12 @@ export class Farmer extends Phaser.GameObjects.Sprite {
     this.route = inField !== goingToField ? [FIELD_ENTRY, destination] : [destination];
   }
 
+  // A certain rooster talked the dog into snatching her hat.
+  setHatless(hatless) {
+    this.hatless = hatless;
+    this.setTexture(hatless ? 'farmer-nohat' : 'farmer', this.frame.name);
+  }
+
   goInside() {
     this.inside = true;
     this.setVisible(false);
@@ -115,15 +121,18 @@ export class Farmer extends Phaser.GameObjects.Sprite {
         const view = Math.abs(dx) > Math.abs(dy) ? 'side' : dy > 0 ? 'down' : 'up';
         this.facing = view === 'side' ? (dx > 0 ? 'right' : 'left') : view;
         this.setFlipX(this.facing === 'left');
-        this.anims.play(`farmer-walk-${view}`, true);
+        this.anims.play(`${this.texture.key}-walk-${view}`, true);
       }
     } else if (this.activity === 'dinner') {
       this.face('down');
     } else {
-      // Standing still: watch the dog when it's close, otherwise get on with work.
+      // Standing still: watch the dog when it's close, otherwise get on with
+      // work. In the field she keeps her eyes on the crops (so a sneaky dog
+      // can creep up behind her).
       const dogDist = Math.hypot(dog.x - this.x, dog.y - this.y);
-      if (dogDist < 56 || ['yard', 'pond', 'shop'].includes(this.activity)) this.faceToward(dog);
-      else this.face(this.activity === 'field' ? 'up' : 'down');
+      if (this.activity === 'field') this.face('up');
+      else if (dogDist < 56 || ['yard', 'pond', 'shop'].includes(this.activity)) this.faceToward(dog);
+      else this.face('down');
       if (this.activity === 'field') {
         this.wait -= dt;
         if (this.wait <= 0) this.route = [randomFieldSpot()];

@@ -55,7 +55,10 @@ export const SHELVES = [
 // What every dog starts with (these are always yours).
 export const STARTER_LOOK = { collar: 'red', neck: null, hat: null, bed: 'red', house: 'red' };
 
-export const ALL_ITEMS = SHELVES.flatMap((shelf) => shelf.items);
+// Things you can't buy, only earn.
+export const EARNED_ITEMS = [{ id: 'hat-feather', name: 'Feather Cap', slot: 'hat', look: 'feather' }];
+
+export const ALL_ITEMS = [...SHELVES.flatMap((shelf) => shelf.items), ...EARNED_ITEMS];
 
 export function getItem(id) {
   return ALL_ITEMS.find((item) => item.id === id) ?? null;

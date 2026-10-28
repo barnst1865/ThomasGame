@@ -11,6 +11,7 @@ import {
   CHICKEN_COLORS,
   FARMER,
   FARMER_COLORS,
+  FARMER_NOHAT,
   MAIL_CARRIER,
   MAIL_CARRIER_COLORS,
   SHOPKEEPER,
@@ -74,6 +75,7 @@ import {
   drawDoghouse,
   drawVanBack,
   drawVanSide,
+  drawWashingLine,
   ROOF_COLORS,
   drawTrough,
   drawScarecrow,
@@ -85,6 +87,7 @@ import {
   TREE_W,
   TREE_H,
 } from './scenery.js';
+import { CAT, CAT_COLORS, ROOSTER, ROOSTER_COLORS, SHEET_HANGING, SHEET, SHEET_MUDDY, MUD, PAW_MUD, PAW_CAT, FEATHER } from './story.js';
 import { MAP_W, MAP_H } from '../world/farmMap.js';
 
 function canvasTexture(scene, key, width, height, draw) {
@@ -205,6 +208,15 @@ export function buildBaseTextures(scene) {
     scent: SCENT,
     package: PACKAGE,
     'toy-box': TOY_BOX,
+    'dinner-bowl': BOWL_EMPTY,
+    'farmer-hat': HAT,
+    'sheet-hanging': SHEET_HANGING,
+    sheet: SHEET,
+    'sheet-muddy': SHEET_MUDDY,
+    mud: MUD,
+    'paw-mud': PAW_MUD,
+    'paw-cat': PAW_CAT,
+    feather: FEATHER,
   };
   for (const [key, item] of Object.entries(items)) pixelTexture(scene, key, item.rows, item.colors);
   for (const [id, icon] of Object.entries(GIFT_ICONS)) pixelTexture(scene, `gift-${id}`, icon.rows, icon.colors);
@@ -232,7 +244,12 @@ export function buildBaseTextures(scene) {
   }
 
   // Grown-ups: Farmer Hazel and the visitors. Each walks the same way.
-  const people = { farmer: [FARMER, FARMER_COLORS], 'mail-carrier': [MAIL_CARRIER, MAIL_CARRIER_COLORS], shopkeeper: [SHOPKEEPER, SHOPKEEPER_COLORS] };
+  const people = {
+    farmer: [FARMER, FARMER_COLORS],
+    'farmer-nohat': [FARMER_NOHAT, FARMER_COLORS],
+    'mail-carrier': [MAIL_CARRIER, MAIL_CARRIER_COLORS],
+    shopkeeper: [SHOPKEEPER, SHOPKEEPER_COLORS],
+  };
   for (const [key, [frames, colors]] of Object.entries(people)) {
     sheetTexture(scene, key, Object.entries(frames).map(([name, rows]) => [name, rows, colors]), 16, 24);
     for (const dir of ['down', 'up', 'side']) {
@@ -268,6 +285,12 @@ export function buildBaseTextures(scene) {
     anim(scene, `${key}-float`, key, ['a', 'b'], 4);
   }
 
+  sheetTexture(scene, 'cat', Object.entries(CAT).map(([pose, rows]) => [pose, rows, CAT_COLORS]), 16, 16);
+  anim(scene, 'cat-walk', 'cat', ['walk1', 'walk2'], 9);
+  sheetTexture(scene, 'rooster', Object.entries(ROOSTER).map(([pose, rows]) => [pose, rows, ROOSTER_COLORS]), 16, 16);
+  anim(scene, 'rooster-walk', 'rooster', ['walk1', 'walk2'], 8);
+  anim(scene, 'rooster-peck', 'rooster', ['walk1', 'crow', 'crow', 'walk1'], 4, 0);
+
   sheetTexture(scene, 'crow', Object.entries(CROW).map(([pose, rows]) => [pose, rows, CROW_COLORS]), 16, 16);
   anim(scene, 'crow-fly', 'crow', ['fly1', 'fly2'], 8);
   anim(scene, 'crow-peck', 'crow', ['perch', 'peck', 'perch', 'peck'], 5, 0);
@@ -276,6 +299,7 @@ export function buildBaseTextures(scene) {
   canvasTexture(scene, 'coop', 64, 58, (canvas) => drawCoop(canvas));
   canvasTexture(scene, 'doghouse', 32, 42, (canvas) => drawDoghouse(canvas, 'name'));
   for (const roof of Object.keys(ROOF_COLORS)) canvasTexture(scene, `doghouse-${roof}`, 32, 42, (canvas) => drawDoghouse(canvas, 'name', roof));
+  canvasTexture(scene, 'washing-line', 60, 28, (canvas) => drawWashingLine(canvas));
   canvasTexture(scene, 'van-back', 40, 36, (canvas) => drawVanBack(canvas));
   canvasTexture(scene, 'van-side', 64, 44, (canvas) => drawVanSide(canvas));
   canvasTexture(scene, 'trough', 32, 16, (canvas) => drawTrough(canvas));

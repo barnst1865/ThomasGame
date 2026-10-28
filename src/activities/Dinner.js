@@ -65,6 +65,8 @@ export class DinnerScene {
     if (scene.fetch.catches > 0) lines.push(LINES.dinnerCatch);
     if (done('butterflies')) lines.push(LINES.dinnerButterflies);
     if (done('pondSticks')) lines.push(LINES.dinnerPond);
+    if (done('findBowl')) lines.push(LINES.dinnerBowl);
+    lines.push(...scene.mischief.dinnerLines());
     // Before the first wisps come, she has noticed something odd.
     if (scene.tonight.wisps > 0 && !scene.save.flags.sawLights) {
       scene.save.flags.sawLights = true;

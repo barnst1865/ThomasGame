@@ -82,6 +82,7 @@ export const SPECIALS = {
     { id: 'crows', jobs: ['chaseCrows'], intro: 'Keep the crows off the crops!' },
     { id: 'hawk', jobs: ['hawk'], intro: 'A hawk is circling over the hens!' },
     { id: 'lamb', jobs: ['lostLamb'], intro: 'And a lost lamb from next door has wandered onto the farm!' },
+    { id: 'cat', jobs: ['findBowl'], intro: `${NAMES.cat} the cat ran off with your dinner bowl!` },
   ],
 };
 

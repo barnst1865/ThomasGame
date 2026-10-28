@@ -42,6 +42,7 @@ export class Dog extends Phaser.Physics.Arcade.Sprite {
     this.pounceCooldown = 0;
     this.pounceHits = new Set();
     this.perks = null; // presents from the mail make some things better (src/data/gifts.js)
+    this.baseTint = null;
     this.swimming = false;
     this.wet = 0; // seconds of dripping left after a swim
     this.ripple = scene.add.image(x, y, 'ripple').setVisible(false);
@@ -104,6 +105,12 @@ export class Dog extends Phaser.Physics.Arcade.Sprite {
     this.updateCarried();
   }
 
+  // `baseTint` colors the dog for a while (muddy paws!).
+  restoreTint() {
+    if (this.baseTint) this.setTint(this.baseTint);
+    else this.clearTint();
+  }
+
   // In the water only the dog's head and back show above the surface.
   setSwimming(swimming) {
     if (swimming === this.swimming) return;
@@ -159,7 +166,7 @@ export class Dog extends Phaser.Physics.Arcade.Sprite {
     this.setMode('stunned', DOG.stunTime);
     this.setVelocity((dx / len) * force, (dy / len) * force);
     this.setTint(0xffb0b0);
-    this.scene.time.delayedCall(DOG.stunTime * 1000, () => this.clearTint());
+    this.scene.time.delayedCall(DOG.stunTime * 1000, () => this.restoreTint());
   }
 
   get digTime() {

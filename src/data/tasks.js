@@ -91,6 +91,23 @@ export const TASKS = {
     title: `Pick a reward at the ${NAMES.shop}`,
     reward: { treats: 0, friendship: 3 },
   },
+  findBowl: {
+    title: 'Find your dinner bowl and put it back',
+    reward: { treats: 3, friendship: 2 },
+  },
+  // Mischief from Sir Cluckington: just for fun, and worth a feather.
+  mischiefSheets: {
+    title: 'Mischief: drag a clean sheet into the mud',
+    reward: { treats: 0, friendship: 0 },
+  },
+  mischiefHat: {
+    title: `Mischief: snatch ${FARMER}'s hat`,
+    reward: { treats: 0, friendship: 0 },
+  },
+  mischiefMud: {
+    title: `Mischief: muddy paw prints on the porch`,
+    reward: { treats: 0, friendship: 0 },
+  },
   goToBed: {
     title: 'Go to bed',
     reward: { treats: 0, friendship: 0 },

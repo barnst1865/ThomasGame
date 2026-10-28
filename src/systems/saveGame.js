@@ -18,6 +18,7 @@ export function createNewSave({ name, breedId, coatId }) {
     gifts: [], // presents from the mail (ids from src/data/gifts.js)
     owned: [], // things picked at the shop (ids from src/data/shop.js)
     home: { bed: STARTER_LOOK.bed, house: STARTER_LOOK.house },
+    feathers: 0, // from Sir Cluckington's mischief
     buried: [], // { tx, ty, item } for everything the dog has hidden underground
     stats: {
       bonesBuried: 0,
@@ -66,6 +67,7 @@ function migrate(data) {
     gifts: knownIds(data.gifts, GIFTS),
     owned: knownIds(data.owned, ALL_ITEMS),
     home: { ...fresh.home, ...cleanStrings(data.home) },
+    feathers: toCount(data.feathers, 0),
     buried: Array.isArray(data.buried)
       ? data.buried.filter((b) => b && Number.isInteger(b.tx) && Number.isInteger(b.ty) && typeof b.item === 'string')
       : [],

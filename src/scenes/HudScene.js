@@ -157,40 +157,49 @@ export class HudScene extends Phaser.Scene {
 
   // --------------------------------------------------------------- tasks
 
+  // The jobs for this part of the day, plus any mischief (just for fun).
   updateTasks() {
     const tasks = this.farm.plan.jobs();
-    const key = tasks.map((t) => `${t.id}:${t.progress}:${t.status}`).join('|');
+    const extras = this.farm.tasks.forPart('mischief');
+    const key = [...tasks, ...extras].map((t) => `${t.id}:${t.progress}:${t.status}`).join('|');
     if (key === this.lastTaskKey) return;
     this.lastTaskKey = key;
 
     this.taskTexts.forEach((t) => t.destroy());
     this.taskTexts = [];
     const g = this.taskPanel.clear();
-    if (tasks.length === 0) {
+    if (tasks.length === 0 && extras.length === 0) {
       this.taskBox.rect = null;
       return;
     }
     const y = 106;
     const lineH = 26;
-    const h = 40 + tasks.length * lineH;
+    const extraTop = extras.length ? 30 : 0;
+    const h = 40 + (tasks.length + extras.length) * lineH + extraTop;
     const heading = `${this.farm.plan.part.name} jobs`;
     const title = this.add.text(0, y + 11, heading, textStyle(16, COLORS.woodDark, { fontStyle: 'bold' }));
-    const lines = tasks.map((task) => {
-      const color = task.status === 'done' ? '#7c8a5a' : task.status === 'failed' ? '#b0623a' : COLORS.ink;
+    const lineFor = (task) => {
+      const color = task.status === 'done' ? '#7c8a5a' : task.status === 'failed' ? '#b0623a' : task.part === 'mischief' ? '#6a3f98' : COLORS.ink;
       return this.add.text(0, 0, this.farm.tasks.label(task), textStyle(15, color));
-    });
-    const w = Math.max(196, ...lines.map((t) => t.width + 58));
+    };
+    const lines = tasks.map(lineFor);
+    const extraLines = extras.map(lineFor);
+    const extraTitle = extras.length ? this.add.text(0, 0, 'Just for fun', textStyle(14, '#6a3f98', { fontStyle: 'bold' })) : null;
+    const all = [...lines, ...extraLines];
+    const w = Math.max(196, ...all.map((t) => t.width + 58));
     const x = W - 12 - w;
     drawPanel(g, x, y, w, h);
     title.setX(x + 16);
-    this.taskTexts.push(title, ...lines);
-    this.taskBox.add([title, ...lines]);
+    const parts = [title, ...all, ...(extraTitle ? [extraTitle] : [])];
+    this.taskTexts.push(...parts);
+    this.taskBox.add(parts);
     this.taskBox.rect = { x, y, w, h };
-    lines.forEach((text, i) => {
-      const ty = y + 36 + i * lineH;
-      drawCheckbox(g, x + 16, ty + 2, tasks[i].status);
-      text.setPosition(x + 38, ty);
+    [...tasks, ...extras].forEach((task, i) => {
+      const ty = y + 36 + i * lineH + (i >= tasks.length ? extraTop : 0);
+      drawCheckbox(g, x + 16, ty + 2, task.status);
+      all[i].setPosition(x + 38, ty);
     });
+    if (extraTitle) extraTitle.setPosition(x + 16, y + 36 + tasks.length * lineH + 8);
   }
 
   // -------------------------------------------------------------- prompt
@@ -552,9 +561,14 @@ export class HudScene extends Phaser.Scene {
         const zs = [0, 1, 2].map((i) => this.add.image(W / 2 - 40 + i * 34, 62 - i * 14, 'zzz').setScale(2 + i).setDepth(51).setAlpha(0));
         zs.forEach((z, i) => this.tweens.add({ targets: z, alpha: 1, y: z.y - 8, delay: i * 250, duration: 500 }));
 
-        const pw = 500;
-        const lineH = 24;
+        // Busy days get two columns so everything fits.
         const lines = summary.lines;
+        const columns = lines.length > 10 ? 2 : 1;
+        const pw = columns === 2 ? 860 : 500;
+        const lineH = 24;
+        const size = columns === 2 ? 15 : 16;
+        const perColumn = Math.ceil(lines.length / columns);
+        const colW = (pw - 68 - (columns - 1) * 30) / columns;
         const x = (W - pw) / 2;
         const y = 92;
         const title = this.add
@@ -562,12 +576,15 @@ export class HudScene extends Phaser.Scene {
           .setOrigin(0.5, 0)
           .setDepth(52);
         const top = y + 28 + title.height;
-        const ph = top - y + 92 + lines.length * lineH;
+        const ph = top - y + 92 + perColumn * lineH;
         const g = this.add.graphics().setDepth(51);
         drawPanel(g, x, y, pw, ph, { radius: 12 });
         lines.forEach((line, i) => {
-          this.add.text(x + 34, top + i * lineH, line.text, textStyle(16, line.color ?? COLORS.ink)).setDepth(52);
-          if (line.right) this.add.text(x + pw - 34, top + i * lineH, line.right, textStyle(16, COLORS.woodDark)).setOrigin(1, 0).setDepth(52);
+          const col = Math.floor(i / perColumn);
+          const lx = x + 34 + col * (colW + 30);
+          const ly = top + (i % perColumn) * lineH;
+          this.add.text(lx, ly, line.text, textStyle(size, line.color ?? COLORS.ink)).setDepth(52);
+          if (line.right) this.add.text(lx + colW, ly, line.right, textStyle(size, COLORS.woodDark)).setOrigin(1, 0).setDepth(52);
         });
         this.add.text(W / 2, y + ph - 54, summary.footer, textStyle(15, COLORS.woodDark)).setOrigin(0.5).setDepth(52);
         const prompt = this.add

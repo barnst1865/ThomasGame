@@ -421,6 +421,18 @@ export function drawDoghouse(canvas, name = '', roof = 'red') {
   outlineCanvas(canvas);
 }
 
+// Two posts and a rope for Farmer Hazel's washing (the sheets hang from it).
+export function drawWashingLine(canvas) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  box(ctx, 1, 4, 2, canvas.height - 4, '#7a4f2e');
+  box(ctx, w - 3, 4, 2, canvas.height - 4, '#7a4f2e');
+  box(ctx, 0, 3, 4, 2, '#8a5a35');
+  box(ctx, w - 4, 3, 4, 2, '#8a5a35');
+  for (let x = 3; x < w - 3; x++) pixel(ctx, x, 5 + Math.round(Math.sin((x / (w - 6)) * Math.PI) * 2), '#e8e0cc');
+  outlineCanvas(canvas);
+}
+
 // The Wagtail Wagon, a shop on wheels. Seen from behind while it drives up
 // the road, and from the side once it's parked.
 const VAN = { body: '#5aa9a0', dark: '#3f8a82', stripe: '#f6ecd2', awningA: '#e25d6a', awningB: '#fbf7ee', tire: '#2b2024', hub: '#9a9aa4' };

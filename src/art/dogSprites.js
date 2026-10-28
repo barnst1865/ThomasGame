@@ -238,6 +238,10 @@ const HATS = {
     front: ['.....y.yy.y.....', '.....rrrrrr.....', '....orRrrRro....'],
     side: ['..........y.y.y.', '..........rrrrr.', '.........orRrRro'],
   },
+  feather: {
+    front: ['.........yy.....', '......oooyo.....', '.....orrryo.....', '....oRRRRRRo....'],
+    side: ['.........yy.....', '..........yoo...', '.........orrrro.', '.........oRRRRRo'],
+  },
 };
 
 export const HAT_COLORS = {
@@ -245,6 +249,7 @@ export const HAT_COLORS = {
   beanie: { r: '#3f6fd4', R: '#2a4a8a', y: '#f6ecd2' },
   party: { r: '#e25d6a', y: '#f2d23a' },
   crown: { r: '#f2c84b', R: '#e25d6a', y: '#fff3b0' },
+  feather: { r: '#3f9c55', R: '#2a6a3a', y: '#e25d6a' },
 };
 
 export const BANDANAS = { red: '#d4483f', blue: '#3f6fd4', green: '#3f9c55', rainbow: null };

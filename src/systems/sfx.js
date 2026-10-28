@@ -114,6 +114,22 @@ export const sfx = {
   blip() {
     tone({ freq: 880, type: 'square', duration: 0.04, volume: 0.03 });
   },
+  crow() {
+    tone({ freq: 500, to: 900, type: 'sawtooth', duration: 0.18, volume: 0.035 });
+    tone({ freq: 900, to: 1000, type: 'sawtooth', start: 0.2, duration: 0.25, volume: 0.035 });
+    tone({ freq: 1000, to: 600, type: 'sawtooth', start: 0.47, duration: 0.35, volume: 0.03 });
+  },
+  meow() {
+    tone({ freq: 700, to: 1000, type: 'triangle', duration: 0.12, volume: 0.04 });
+    tone({ freq: 1000, to: 600, type: 'triangle', start: 0.12, duration: 0.2, volume: 0.04 });
+  },
+  purr() {
+    for (let i = 0; i < 5; i++) noise({ start: i * 0.12, duration: 0.08, volume: 0.03, filter: 220 });
+  },
+  squelch() {
+    noise({ duration: 0.25, volume: 0.06, filter: 400 });
+    tone({ freq: 180, to: 90, type: 'sine', duration: 0.2, volume: 0.05 });
+  },
   honk() {
     tone({ freq: 392, type: 'square', duration: 0.12, volume: 0.05 });
     tone({ freq: 392, type: 'square', start: 0.18, duration: 0.16, volume: 0.05 });

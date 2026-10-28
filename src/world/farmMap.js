@@ -82,6 +82,9 @@ export const POINTS = {
   shopkeeper: { x: px(26) + 4, y: px(29) + 10 },
   shopFarmer: { x: px(20) + 4, y: px(29) + 10 },
   toyBox: { x: px(14) + 8, y: px(8) - 2 },
+  // Farmer Hazel's washing line and the mud puddle beside the house.
+  washingLine: { x: px(5) - 2, y: px(10) - 2 },
+  mud: { x: px(4) + 4, y: px(13) + 10 },
 };
 
 // Where the road leaves the map, toward town (visitors appear and vanish here).

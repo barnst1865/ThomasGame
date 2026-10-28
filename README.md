@@ -32,6 +32,9 @@ to day (the same one never comes two days in a row):
    - **A hawk over the hens:** when it swoops down low, bark to scare it
      back up. Three frights and it gives up.
    - **A lost lamb from next door:** find it and herd it into the pen.
+   - **Pickles the cat** runs off with your dinner bowl. Follow her paw
+     prints. If she's up a tree, bark until she drops it; if she buried
+     it, dig it up. Then put it back on the porch.
 4. **Dinner:** sit down with Farmer Hazel on the porch as the sun sets.
 5. **Night:** something comes out of the woods (see below). Bark to
    startle prowlers, then pounce to chase them off. Watch out for the
@@ -60,6 +63,21 @@ making your bark carry farther.
 If a prowler gets what it came for, the job is missed, but nobody gets
 hurt and there's always tomorrow night. Arrows at the edge of the screen
 point to trouble you can't see.
+
+### Sir Cluckington's mischief
+
+From day 2, Sir Cluckington the rooster has an idea for some harmless
+mischief each day. Talk to him in the coop yard (look for the "!") to
+hear it. Mischief is just for fun and can be skipped:
+
+- Pull a clean sheet off the washing line and drag it through the mud.
+- Sneak up behind Farmer Hazel while she works in the field and snatch
+  her hat for him.
+- Roll in the mud puddle, then run across the porch.
+
+Each one earns a fancy feather. Three feathers make a Feather Cap to wear.
+Farmer Hazel always works out whose idea it was. On other days Pickles
+naps somewhere sunny, and you can pet her.
 
 ### Visitors, presents and rewards
 

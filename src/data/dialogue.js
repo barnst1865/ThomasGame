@@ -26,6 +26,7 @@ export const LINES = {
   ],
   hints: {
     mail: `There's a package by the mailbox! Bring it to me, {name}.`,
+    findBowl: `${NAMES.cat} ran off with your bowl! Follow her paw prints. If she's up a tree, bark!`,
     shopVisit: `Let's go to the ${NAMES.shop} and pick you something!`,
     sheepOut: "The sheep want to graze! Go into the pen, get behind them, and push them out through the gate.",
     collectEggs: 'There are still eggs by the coop. Bring them to the basket on the porch.',
@@ -103,6 +104,23 @@ export const LINES = {
     wisps: 'If you see any funny little lights by the coop... keep an eye on them.',
   },
   bedtimeNow: 'Time for bed! Head to your dog bed by the doghouse.',
+
+  // Pickles the cat
+  picklesIntro: `That's ${NAMES.cat}! She LOVES to hide things. Follow her paw prints, {name}!`,
+  picklesPurr: ['Purrrr...', 'Mrrp?', 'Purr purr...'],
+  picklesGrumpy: ['Mrrow!', 'Hsss!'],
+  bowlBack: `${NAMES.cat}! That cat... Thank you for finding your bowl, {name}.`,
+  dinnerBowl: `And thank you for finding your bowl. That ${NAMES.cat}!`,
+
+  // Sir Cluckington the rooster
+  roosterHello: `Good day! I am ${NAMES.rooster}, the finest rooster on this farm.`,
+  roosterDone: ['Splendid mischief! Bawk!', 'Ha! Marvellous! Come back tomorrow for more.', 'Top-notch troublemaking, old chap!'],
+  roosterIdle: ['Bawk. No more ideas today.', 'A rooster needs his beauty sleep. Tomorrow!'],
+  roosterHat: `Bawk bawk! It suits me, don't you think?`,
+  feathersCap: `Three feathers! ${NAMES.rooster} made you a Feather Cap. Wear it from your toy box!`,
+  dinnerSheets: `Somebody dragged my clean sheet through the mud! ${NAMES.rooster}, was this YOUR idea?`,
+  dinnerHat: `I found my hat in the coop, of all places. ${NAMES.rooster}! I know it was you!`,
+  dinnerMud: `Who left muddy paw prints all over my porch? Hmm... ${NAMES.rooster} looks very guilty.`,
 
   // Mo the mail carrier
   moDrop: [`Package for ${NAMES.farmer}!`, 'Special delivery!', "Here's the mail, pup. Don't chew it!"],

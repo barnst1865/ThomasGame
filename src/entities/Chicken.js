@@ -8,8 +8,11 @@ import { normalize, clampToRect, flee } from '../systems/steering.js';
 const STRAY_RADIUS = 50;
 
 export class Chicken extends Phaser.Physics.Arcade.Sprite {
+  // color: 'white' or 'brown' for a hen, or 'rooster' for Sir Cluckington.
   constructor(scene, x, y, color) {
-    super(scene, x, y, `hen-${color}`, 'walk1');
+    const key = color === 'rooster' ? 'rooster' : `hen-${color}`;
+    super(scene, x, y, key, 'walk1');
+    this.texKey = key;
     this.color = color;
     scene.add.existing(this);
     scene.physics.add.existing(this);
@@ -157,7 +160,7 @@ export class Chicken extends Phaser.Physics.Arcade.Sprite {
     if ((blocked.up && vy < 0) || (blocked.down && vy > 0)) vx += (vx >= 0 ? 1 : -1) * Math.abs(vy) * 0.7;
     this.setVelocity(vx, vy);
     if (Math.abs(vx) > 1) this.setFlipX(vx < 0);
-    const key = `hen-${this.color}`;
+    const key = this.texKey;
     if (Math.hypot(vx, vy) > 2) {
       this.anims.play(`${key}-walk`, true);
     } else if (peck && !this.anims.isPlaying && Math.random() < 0.01) {
